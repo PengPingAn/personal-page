@@ -118,7 +118,7 @@
           </div>
         </template>
         <template #content>
-          <div class="p-2">
+          <div class="">
             <div class="flex gap-4">
               <img
                 :src="imgUlrs[0]"

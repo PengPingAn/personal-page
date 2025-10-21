@@ -6,9 +6,9 @@
 
     <transition-group name="scale-in" tag="div" appear>
       <div
-        class="checkbox-container"
         v-for="(item, index) in items"
         :key="item.id"
+        class="checkbox-container"
         :style="{ transitionDelay: index * 0.1 + 's' }"
       >
         <input
@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 
 interface PlanItem {
   id: number;
@@ -50,15 +50,8 @@ interface PlanItem {
 
 const props = defineProps<{ data: PlanItem[] }>();
 
-const items = ref<PlanItem[]>([]);
-
-onMounted(() => {
-  props.data.forEach((item, index) => {
-    setTimeout(() => {
-      items.value.push(item);
-    }, index * 100);
-  });
-});
+// 一次性把数据全部渲染，确保高度固定
+const items = ref<PlanItem[]>(props.data);
 </script>
 
 <style scoped>
@@ -93,7 +86,6 @@ onMounted(() => {
   background-size: 55px 55px;
   border-radius: 1rem;
   padding: 1rem;
-  max-width: 400px;
 }
 
 .text-title {
@@ -102,24 +94,23 @@ onMounted(() => {
   text-align: center;
 }
 
-/* 父容器固定高度，避免抖动 */
 .checkbox-container {
   user-select: none;
   display: flex;
   align-items: flex-start;
 }
 
-/* 缩放动画 */
+/* 依次动画：scale+fade */
 .scale-in-enter-from {
-  transform: scale(0.8);
   opacity: 0;
+  transform: scale(0.8);
 }
 .scale-in-enter-active {
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .scale-in-enter-to {
-  transform: scale(1);
   opacity: 1;
+  transform: scale(1);
 }
 
 .task-checkbox {
@@ -208,13 +199,11 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-/* 删除线只作用文字 */
 .text-completed {
   text-decoration: line-through;
   color: #6b7280;
 }
 
-/* 勾选效果 */
 .task-checkbox:checked + .checkbox-label .checkbox-box {
   border-color: #10b981;
   background: #10b981;
@@ -263,6 +252,12 @@ onMounted(() => {
     width: 60px;
     height: 60px;
     opacity: 0;
+  }
+}
+
+@media (max-width: 1400px) {
+  .container {
+    max-width: none;
   }
 }
 </style>

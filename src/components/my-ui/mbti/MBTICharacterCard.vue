@@ -123,7 +123,7 @@ onMounted(async () => {
   display: flex;
   border-radius: 1rem;
   overflow: hidden;
-  max-width: 800px;
+  /* max-width: 800px; */
   width: 100%;
   color: #fff;
   background: #2c3e50;

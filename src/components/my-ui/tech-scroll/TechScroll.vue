@@ -405,4 +405,10 @@ img {
     display: none;
   }
 }
+
+@media (max-width: 1400px) {
+  .container {
+    max-width: none;
+  }
+}
 </style>

@@ -12,16 +12,29 @@
         { label: 'J/P', value: 60, tooltip: '判断 (J) 与知觉 (P) 的差异' },
       ]"
     />
-    <div class="flex gap-4">
+    <div class="flex flex-col xl:flex-row gap-4">
       <PlanGoalList :data="myPlans" />
       <TechScroll />
     </div>
-    <div>我的一些个人项目</div>
+
+    <Card class="my-4">
+      <template #default>
+        <p class="my-4 text-xl text-center flex gap-2 justify-center">
+          <span class="material-symbols-light--menu-book-outline-sharp"></span
+          >近期的一些文章
+        </p>
+        <TimelineArticle></TimelineArticle>
+        <div class="my-4 text-right">
+          <HoverLink href="https://www.example.com" text="还有更多，去看看？" />
+        </div>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from "vue";
+import TimelineArticle from "./component/TimelineArticle.vue";
 
 const myPlans = [
   { id: 1, content: "写一篇技术文章", completed: true },
