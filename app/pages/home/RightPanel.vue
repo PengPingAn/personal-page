@@ -94,7 +94,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from "vue";
 import TimelineArticle from "./component/TimelineArticle.vue";
-import TextB from "~/components/TextB.vue";
 
 const myPlans = [
   { id: 1, content: "写一篇技术文章", completed: true },
