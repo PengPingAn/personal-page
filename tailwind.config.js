@@ -1,11 +1,17 @@
-import animate from "tailwindcss-animate";
-import { setupInspiraUI } from "@inspira-ui/plugins";
-
+/** @type {import('tailwindcss').Config} */
 export default {
   darkMode: "class",
   safelist: ["dark"],
   prefix: "",
-  content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+  content: [
+    "./app/components/**/*.{vue,js,ts}",
+    "./app/pages/*.vue",
+    "./app/pages/**/*.vue",
+    "./app/pages/**/**/*.vue",
+    "./app/app.vue",
+    "./plugins/**/*.{js,ts}",
+    "./nuxt.config.{js,ts}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -49,8 +55,10 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        stylish: ["Caveat", "cursive"], // 新增字体
+      },
     },
   },
-
-  plugins: [animate, setupInspiraUI],
+  plugins: [],
 };
