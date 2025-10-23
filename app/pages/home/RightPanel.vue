@@ -95,15 +95,20 @@
 
         <div class="flex gap-4">
           <div class="w-fit">
-            <Card class="h-64 w-full">
-              <!-- <PixelatedCanvas :height="200" :width="150" /> -->
+            <Card class="h-64 w-full" bg-color="#000">
+              <!-- <PixelatedCanvas
+                :height="200"
+                :width="150"
+                src="https://img1.baidu.com/it/u=2691502892,2994512042&fm=253&fmt=auto&app=138&f=JPEG?w=400&h=676"
+              /> -->
               <ParticleImage
                 :canvas-width="150"
                 :canvas-height="200"
                 :particle-size="1"
-                image-src="https://assets.aceternity.com/manu-red.png"
+                image-src="https://img2.baidu.com/it/u=119787490,3418968819&fm=253&app=138&f=JPEG?w=800&h=1584"
                 :responsive-width="true"
                 :strength="0.1"
+                :radius="900"
               />
             </Card>
           </div>
