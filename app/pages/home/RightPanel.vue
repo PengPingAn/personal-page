@@ -30,62 +30,101 @@
       </template>
     </Card>
     <div class="flex gap-4">
-      <Card
-        style="height: 500px; width: 200px"
-        class="group relative overflow-hidden bg-transparent border-0"
-      >
-        <!-- 背景图片 -->
-        <div
-          class="absolute inset-0 bg-cover bg-center transition-filter duration-500 filter blur-sm group-hover:blur-0"
-          :style="{
-            backgroundImage:
-              'url(https://q0.itc.cn/q_70/images03/20251001/344ea6c5614f4fb4b6930d0c4d779e1f.jpeg)',
-          }"
-        ></div>
-
-        <!-- 文字层 -->
-        <div
-          class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white"
+      <!-- 左侧列 -->
+      <div class="">
+        <Card
+          style="height: 100%; width: 200px"
+          class="group relative overflow-hidden bg-transparent border-0"
         >
-          <p class="flex flex-col items-center leading-none text-4xl">
-            <span>现</span>
-            <span>位</span>
-            <span>于</span>
-            <br />
-            <span class="font-bold">广</span>
-            <span class="font-bold">州</span>
-            <span class="font-bold">市</span>
-            <br />
-            <span class="font-bold">天</span>
-            <span class="font-bold">河</span>
-            <span class="font-bold">区</span>
-          </p>
-        </div>
-      </Card>
-      <div style="height: 200px" class="flex gap-4 w-full">
-        <!-- 第一个卡片 60% -->
-        <Card class="flex-[3]">
+          <!-- 背景图片 -->
           <div
-            class="relative sayText quote-text m-8 text-4xl text-gray-800 flex justify-center"
-          >
-            <div>
-              <span style="color: rgb(143 143 143)">纵有疾风起</span>
-              <br />
-              <span>人生不言弃</span>
-            </div>
-          </div>
-        </Card>
+            class="absolute inset-0 bg-cover bg-center transition-filter duration-500 filter blur-sm group-hover:blur-0"
+            :style="{
+              backgroundImage:
+                'url(https://q0.itc.cn/q_70/images03/20251001/344ea6c5614f4fb4b6930d0c4d779e1f.jpeg)',
+            }"
+          ></div>
 
-        <!-- 第二个卡片 40% -->
-        <Card class="flex-[2]">
-          <div class="flex justify-center">
-            <img
-              src="https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761120649_1e91044c.gif"
-              alt=""
-              srcset=""
-            />
+          <!-- 文字层 -->
+          <div
+            class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white"
+          >
+            <p class="flex flex-col items-center leading-none text-4xl">
+              <span>现</span>
+              <span>位</span>
+              <span>于</span>
+              <br />
+              <span class="font-bold">广</span>
+              <span class="font-bold">州</span>
+              <span class="font-bold">市</span>
+              <br />
+              <span class="font-bold">天</span>
+              <span class="font-bold">河</span>
+              <span class="font-bold">区</span>
+            </p>
           </div>
         </Card>
+      </div>
+
+      <!-- 右侧列 -->
+      <div class="flex-[2] flex flex-col gap-4">
+        <!-- 第一行：第二、三个卡片 -->
+        <div class="flex gap-4">
+          <Card class="flex-[3] h-48">
+            <div
+              class="relative sayText quote-text m-8 text-4xl text-gray-800 flex justify-center"
+            >
+              <div>
+                <span style="color: rgb(143 143 143)">纵有疾风起</span>
+                <br />
+                <span>人生不言弃</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card class="flex-[2] h-48">
+            <div class="flex justify-center items-center h-full">
+              <img
+                src="https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761120649_1e91044c.gif"
+                alt=""
+                class="max-h-full"
+              />
+            </div>
+          </Card>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="w-fit">
+            <Card class="h-64 w-full">
+              <!-- <PixelatedCanvas :height="200" :width="150" /> -->
+              <ParticleImage
+                :canvas-width="150"
+                :canvas-height="200"
+                :particle-size="1"
+                image-src="https://assets.aceternity.com/manu-red.png"
+                :responsive-width="true"
+                :strength="0.1"
+              />
+            </Card>
+          </div>
+          <div class="w-full">
+            <Card class="max-h-[256px] h-[256px]">
+              <AnimatedList>
+                <template #default>
+                  <Notification
+                    v-for="(item, idx) in notifications"
+                    :key="idx"
+                    :name="item.name"
+                    :description="item.description"
+                    :icon="item.icon"
+                    :color="item.color"
+                    :time="item.time"
+                  />
+                </template>
+              </AnimatedList>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -104,6 +143,44 @@ const myPlans = [
     id: 5,
     content: "提高后端技术栈深度与广度",
     completed: false,
+  },
+];
+
+const notifications = [
+  {
+    name: "Payment received",
+    description: "Inspira UI",
+    time: "15m ago",
+    icon: "💸",
+    color: "#00C9A7",
+  },
+  {
+    name: "User signed up",
+    description: "Inspira UI",
+    time: "10m ago",
+    icon: "👤",
+    color: "#FFB800",
+  },
+  {
+    name: "New message",
+    description: "Inspira UI",
+    time: "5m ago",
+    icon: "💬",
+    color: "#FF3D71",
+  },
+  {
+    name: "New event",
+    description: "Inspira UI",
+    time: "2m ago",
+    icon: "🗞️",
+    color: "#1E86FF",
+  },
+  {
+    name: "Task completed",
+    description: "Inspira UI",
+    time: "1m ago",
+    icon: "✅",
+    color: "#45B26B",
   },
 ];
 

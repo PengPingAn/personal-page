@@ -11,6 +11,15 @@
       <RightPanel />
     </div>
 
+    <div class="mt-4">
+      <div class="font-heading text-white text-6xl">作品集</div>
+      <ProjectTabs></ProjectTabs>
+      <!-- <LampEffect>
+        <div class="font-heading text-white text-6xl">作品集</div>
+      </LampEffect> -->
+      <DraggableCards></DraggableCards>
+    </div>
+
     <!-- 作品集 -->
     <div class="portfolio-section">作品集</div>
   </div>

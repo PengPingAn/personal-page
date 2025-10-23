@@ -4,13 +4,11 @@
     :class="{ hover: isHover }"
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
-    :style="{ backgroundImage: image ? `url(${image})` : 'none' }"
+    :style="{
+      backgroundImage: image ? `url(${image})` : 'none',
+      backgroundColor: bgColor,
+    }"
   >
-    <!-- 卡片封面/图片 -->
-    <!-- <div v-if="image" class="card-image">
-      <img :src="image" :alt="title" />
-    </div> -->
-
     <!-- 卡片主体 -->
     <div class="card-body">
       <h3 class="card-title">{{ title }}</h3>
@@ -45,6 +43,7 @@ defineProps({
   title: { type: String, default: "" },
   content: { type: String, default: "" },
   image: { type: String, default: "" },
+  bgColor: { type: String, default: "#ffffff" },
   actions: {
     type: Array,
     default: () => [],

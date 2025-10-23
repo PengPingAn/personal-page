@@ -102,6 +102,7 @@ onMounted(async () => {
   background-size: 55px 55px;
   border-radius: 1rem;
   padding: 1rem;
+  max-width: none !important;
 }
 
 .text-title {

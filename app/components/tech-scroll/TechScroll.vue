@@ -155,6 +155,7 @@ const onLeave = () => {
   border-radius: 1rem;
   overflow: hidden;
   background: linear-gradient(180deg, #fefde8 0%, #cbc6c6 100%);
+  max-width: none !important;
 }
 
 .tech-scroll-container {
