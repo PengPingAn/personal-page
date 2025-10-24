@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-[150px]">
     <div class="flex gap-4 mb-4">
       <div class="h-auto w-[2px] bg-[#e16060]"></div>
       <span class="font-bold text-xl">

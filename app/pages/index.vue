@@ -12,7 +12,11 @@
     </div>
 
     <div class="mt-4">
-      <div class="font-heading text-white text-6xl">作品集</div>
+      <div class="font-heading text-6xl text-center m-16">
+        <TextHighlight class="bg-gradient-to-r from-indigo-300 to-purple-300">
+          我的一些作品
+        </TextHighlight>
+      </div>
       <ProjectTabs></ProjectTabs>
       <DraggableCards></DraggableCards>
     </div>
