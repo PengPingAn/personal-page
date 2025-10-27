@@ -16,74 +16,161 @@
 
     <!-- Content -->
     <div class="relative w-full h-[40rem] perspective-[1000px]">
-      <div v-for="(tab, index) in tabs" :key="tab.value" :style="contentStyle(index)">
-        <p class="text-2xl md:text-4xl font-bold mb-4">{{ tab.content }}</p>
-        There has to be some
-        <br />
-        <!-- PointerHighlight 传入 triggerKey -->
-        <PointerHighlight :key="activeIndex" :containerClassName="'my-pointer'">
-          <span class="text-2xl font-bold">Hover this text</span>
-        </PointerHighlight>
-
-        <!-- 轮播整体容器 -->
-        <div
-          class="relative w-[90%] m-auto h-[80%] flex flex-col items-center justify-center"
-          @mouseenter="hovering = true"
-          @mouseleave="hovering = false"
-        >
-          <!-- 图片显示区域 -->
+      <div
+        v-for="(tab, index) in tabs"
+        :key="tab.value"
+        :style="contentStyle(index)"
+        class="container"
+      >
+        <!-- <Motion
+          as="img"
+          src="https://assets.aceternity.com/linear-demo.webp"
+          class="pointer-events-none absolute inset-0 size-full object-cover [mask-image:radial-gradient(circle,transparent,black_80%)]"
+          :initial="{ opacity: 0 }"
+          :while-in-view="{
+            opacity: 0.5,
+          }"
+          :transition="{
+            duration: 1,
+          }"
+        /> -->
+        <!-- 左右布局容器 -->
+        <div class="flex flex-row w-full h-full gap-8">
+          <!-- 左侧文字区域 -->
           <div
-            class="relative w-[85%] h-full overflow-hidden flex items-center justify-center"
+            class="w-[40%] h-full overflow-y-auto pr-4 scrollbar-hide flex flex-col gap-2 custom-scrollbar"
           >
-            <div
-              v-for="(img, imgIndex) in tab.images"
-              :key="img"
-              class="absolute rounded-xl shadow-lg transition-slide"
-              :style="{
-                width: '80%',
-                height: '100%',
-                transform: getTransform(index, imgIndex),
-                zIndex: getZIndex(index, imgIndex),
-                opacity: getOpacity(index, imgIndex),
-              }"
-            >
-              <img
-                :src="img"
-                class="w-full h-full object-cover select-none rounded-2xl"
-                draggable="false"
-              />
-            </div>
+            <template v-for="(item, idx) in tab.content" :key="idx">
+              <template v-if="item.type === 'text'">
+                <span
+                  class="text-lg font-bold text-white whitespace-pre-wrap break-words"
+                >
+                  {{ item.text }}
+                  <template
+                    v-if="
+                      tab.content[idx + 1]?.type === 'inline' ||
+                      tab.content[idx + 1]?.type === 'link' ||
+                      tab.content[idx + 1]?.type === 'highlight'
+                    "
+                  >
+                    <span
+                      class="inline ml-1"
+                      v-if="tab.content[idx + 1].type === 'inline'"
+                    >
+                      {{ tab.content[idx + 1].text }}
+                    </span>
+                    <HoverLink
+                      v-else-if="tab.content[idx + 1].type === 'link'"
+                      :href="tab.content[idx + 1].text"
+                      :text="tab.content[idx + 1].text"
+                      color="#74fa85"
+                      class="inline ml-1"
+                    />
+                    <PointerHighlight
+                      v-else-if="tab.content[idx + 1].type === 'highlight'"
+                      :key="activeIndex + '-' + idx"
+                      :containerClassName="'my-pointer'"
+                    >
+                      <span
+                        class="text-lg font-bold block whitespace-pre-wrap break-words"
+                      >
+                        {{ tab.content[idx + 1].text }}
+                      </span>
+                    </PointerHighlight>
+                  </template>
+                </span>
+              </template>
+
+              <!-- h3 类型 -->
+              <h3
+                v-else-if="item.type === 'h3'"
+                class="text-2xl md:text-3xl font-semibold mt-4 mb-2 text-white"
+              >
+                {{ item.text }}
+              </h3>
+
+              <!-- 单独 link/inline，如果上一个不是 text -->
+              <template
+                v-else-if="
+                  (item.type === 'link' || item.type === 'inline') &&
+                  tab.content[idx - 1]?.type !== 'text'
+                "
+              >
+                <HoverLink
+                  v-if="item.type === 'link'"
+                  :href="item.text"
+                  :text="item.text"
+                  color="#fff"
+                />
+                <span v-else class="text-lg font-bold text-white inline">{{
+                  item.text
+                }}</span>
+              </template>
+            </template>
           </div>
 
-          <!-- 左右按钮 -->
-          <button
-            class="absolute z-50 -translate-y-1/2 top-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300"
-            :style="{ left: hovering ? '-20px' : '-40px' }"
-            @click="prevSlide(index)"
+          <!-- 右侧轮播 -->
+          <div
+            class="w-[55%] h-full relative flex flex-col items-center justify-start justify-center"
           >
-            ‹
-          </button>
+            <!-- 轮播图片区域 -->
+            <div
+              class="relative w-full h-[70%] overflow-hidden flex items-center justify-center"
+              @mouseenter="hovering = true"
+              @mouseleave="hovering = false"
+            >
+              <div
+                v-for="(img, imgIndex) in tab.images"
+                :key="img"
+                class="absolute transition-slide rounded-3xl shadow-lg"
+                :style="{
+                  width: '80%',
+                  height: '100%',
+                  transform: getTransform(index, imgIndex),
+                  zIndex: getZIndex(index, imgIndex),
+                  opacity: getOpacity(index, imgIndex),
+                }"
+              >
+                <img
+                  :src="img"
+                  class="w-full h-full object-cover rounded-3xl"
+                  draggable="false"
+                />
+              </div>
+            </div>
 
-          <button
-            class="absolute z-50 -translate-y-1/2 top-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300"
-            :style="{ right: hovering ? '-20px' : '-40px' }"
-            @click="nextSlide(index)"
-          >
-            ›
-          </button>
+            <!-- 小圆点 + 按钮容器 -->
+            <div class="mt-4 w-full flex justify-between items-center px-4">
+              <!-- 小圆点居中 -->
+              <div class="flex gap-2 justify-center flex-1">
+                <span
+                  v-for="(img, dotIndex) in tab.images"
+                  :key="dotIndex"
+                  :class="[
+                    slideIndexes[index] === dotIndex
+                      ? 'bg-white w-8 h-2 rounded-sm'
+                      : 'bg-white/50 w-2 h-2 rounded-full',
+                    'transition-all duration-300',
+                  ]"
+                ></span>
+              </div>
 
-          <!-- 小圆点 -->
-          <div class="mt-6 flex gap-2 justify-center">
-            <span
-              v-for="(img, dotIndex) in tab.images"
-              :key="dotIndex"
-              :class="[
-                slideIndexes[index] === dotIndex
-                  ? 'bg-white w-8 h-2 rounded-sm'
-                  : 'bg-white/50 w-2 h-2 rounded-full',
-                'transition-all duration-300',
-              ]"
-            ></span>
+              <!-- 左右按钮靠右 -->
+              <div class="flex gap-2">
+                <button
+                  class="bg-white/30 hover:bg-white/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300"
+                  @click="prevSlide(index)"
+                >
+                  ‹
+                </button>
+                <button
+                  class="bg-white/30 hover:bg-white/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300"
+                  @click="nextSlide(index)"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -93,19 +180,46 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { Motion } from "motion-v";
+
+type ContentItem = {
+  type: "text" | "inline" | "highlight" | "h3" | "link";
+  text: string;
+};
 
 type Tab = {
   title: string;
   value: string;
-  content: string;
+  content: ContentItem[];
   images: string[];
 };
 
 const tabs: Tab[] = [
   {
-    title: "Product",
-    value: "product",
-    content: "Product Tab",
+    title: "爱语",
+    value: "爱语",
+    content: [
+      { type: "h3", text: "爱语情侣日记" },
+      { type: "h3", text: "作品介绍" },
+      {
+        type: "text",
+        text: `这是一个专为情侣打造的私密空间网站，承载了技术与情感的融合，记录彼此的回忆，`,
+      },
+      { type: "highlight", text: "分享专属的浪漫时刻。" },
+      { type: "h3", text: "技术栈" },
+      {
+        type: "text",
+        text: `前端：vue3、Pinia、Tailwind CSS、Axios、Naive UI、Markdown
+后端：.NET 8 Web API、SqlSugar、SQLite、Redis、WebSocket、Swagger`,
+      },
+      { type: "h3", text: "链接" },
+      { type: "text", text: "Gitee：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+      { type: "text", text: "Demo：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+      { type: "text", text: "GitHub：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+    ],
     images: [
       "https://picsum.photos/id/1015/1200/700",
       "https://picsum.photos/id/1016/1200/700",
@@ -115,7 +229,11 @@ const tabs: Tab[] = [
   {
     title: "Services",
     value: "services",
-    content: "Services Tab",
+    content: [
+      { type: "h3", text: "Services Tab" },
+      { type: "text", text: "Check out our " },
+      { type: "highlight", text: "awesome services" },
+    ],
     images: [
       "https://picsum.photos/id/1021/1200/700",
       "https://picsum.photos/id/1024/1200/700",
@@ -130,13 +248,10 @@ const slideIndexes = ref<number[]>(tabs.map(() => 0));
 
 const setActive = async (index: number) => {
   if (index === activeIndex.value) return;
-
   const prevIndex = activeIndex.value;
   const prevSlideIndex = slideIndexes.value[prevIndex];
-
   slideIndexes.value[index] = prevSlideIndex;
   activeIndex.value = index;
-
   await nextTick();
   slideIndexes.value[index] = 0;
 };
@@ -155,6 +270,7 @@ const prevSlide = (tabIndex: number) => {
 // 自动轮播
 let timer: any;
 const startAuto = () => {
+  stopAuto();
   timer = setInterval(() => {
     if (!hovering.value) nextSlide(activeIndex.value);
   }, 4000);
@@ -175,6 +291,7 @@ const tabClasses = (index: number) =>
     index === activeIndex.value ? "bg-gray-200 text-black" : "bg-gray-800 text-white",
   ].join(" ");
 
+// Content 样式
 const contentStyle = (index: number) => {
   const offset = index - activeIndex.value;
   return {
@@ -188,7 +305,8 @@ const contentStyle = (index: number) => {
     width: "100%",
     height: "100%",
     borderRadius: "1rem",
-    background: "linear-gradient(to bottom right, #7c3aed, #8b5cf6)",
+    // background: "linear-gradient(to bottom right, #7c3aed, #8b5cf6)",
+    // background: "#146a7e",
     padding: "2rem",
     boxSizing: "border-box",
     fontWeight: "bold",
@@ -242,5 +360,46 @@ img {
 button {
   font-size: 1.5rem;
   line-height: 1;
+}
+/* 隐藏滚动条 */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* From Uiverse.io by adamgiebl */
+.container {
+  width: 100%;
+  height: 100%;
+  --color: rgba(114, 114, 114, 0.3);
+  background-color: #191a1a;
+  background-image: linear-gradient(
+      0deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    );
+  background-size: 55px 55px;
 }
 </style>

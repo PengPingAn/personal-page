@@ -12,10 +12,13 @@
     </div>
 
     <div class="mt-4">
-      <div class="font-heading text-6xl text-center m-16">
-        <TextHighlight class="bg-gradient-to-r from-indigo-300 to-purple-300">
+      <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
+        <!-- <TextHighlight class="bg-gradient-to-r from-indigo-300 to-purple-300">
           我的一些作品
-        </TextHighlight>
+        </TextHighlight> -->
+        <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
+          ───我的作品───
+        </Text3d>
       </div>
       <ProjectTabs></ProjectTabs>
       <DraggableCards></DraggableCards>

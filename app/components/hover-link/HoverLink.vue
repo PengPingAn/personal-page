@@ -1,5 +1,5 @@
 <template>
-  <a :href="href" target="_blank" class="hover-link">
+  <a :href="href" target="_blank" class="hover-link" :style="{ color: color }">
     {{ text }}
     <span class="underline"></span>
   </a>
@@ -9,6 +9,7 @@
 defineProps({
   href: { type: String, required: true },
   text: { type: String, required: true },
+  color: { type: String, required: "#000" },
 });
 </script>
 
