@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <p class="text-[#FFF] text-xl p-2 flex justify-center">我的技能</p>
     <div class="tech-scroll-container" @mouseenter="onEnter" @mouseleave="onLeave">
       <div class="scroll-wrapper" ref="wrapper">
         <!-- row1 -->
@@ -154,8 +155,12 @@ const onLeave = () => {
   margin: 0 auto;
   border-radius: 1rem;
   overflow: hidden;
-  background: linear-gradient(180deg, #fefde8 0%, #cbc6c6 100%);
+  /* background: linear-gradient(180deg, #fefde8 0%, #cbc6c6 100%); */
   max-width: none !important;
+  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
+  -webkit-backdrop-filter: blur(15px);
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .tech-scroll-container {

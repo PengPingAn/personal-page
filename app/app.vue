@@ -10,8 +10,8 @@ import HomePage from "./pages/index.vue";
 html,
 body {
   margin: 0;
-  height: 100%;
-  width: 100%;
+  /* height: 100%;
+  width: 100%; */
 }
 
 body {
@@ -21,6 +21,9 @@ body {
   background-attachment: fixed;
   font-family: "Noto Serif SC", serif;
   /* font-family: "Caveat", cursive; */
+  background-image: url("../public/img/bg.png");
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 @keyframes hand {
