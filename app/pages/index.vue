@@ -21,9 +21,9 @@
         </Text3d>
       </div>
       <ProjectTabs></ProjectTabs>
-      <DraggableCards></DraggableCards>
     </div>
   </div>
+  <DraggableCards></DraggableCards>
 </template>
 
 <script setup lang="ts">

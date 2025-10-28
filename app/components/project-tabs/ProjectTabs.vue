@@ -22,19 +22,6 @@
         :style="contentStyle(index)"
         class="container"
       >
-        <!-- <Motion
-          as="img"
-          src="https://assets.aceternity.com/linear-demo.webp"
-          class="pointer-events-none absolute inset-0 size-full object-cover [mask-image:radial-gradient(circle,transparent,black_80%)]"
-          :initial="{ opacity: 0 }"
-          :while-in-view="{
-            opacity: 0.5,
-          }"
-          :transition="{
-            duration: 1,
-          }"
-        /> -->
-        <!-- 左右布局容器 -->
         <div class="flex flex-row w-full h-full gap-8">
           <!-- 左侧文字区域 -->
           <div
@@ -81,50 +68,31 @@
                 </span>
               </template>
 
-              <!-- h3 类型 -->
               <h3
                 v-else-if="item.type === 'h3'"
                 class="text-2xl md:text-3xl font-semibold mt-4 mb-2 text-white"
               >
                 {{ item.text }}
               </h3>
-
-              <!-- 单独 link/inline，如果上一个不是 text -->
-              <template
-                v-else-if="
-                  (item.type === 'link' || item.type === 'inline') &&
-                  tab.content[idx - 1]?.type !== 'text'
-                "
-              >
-                <HoverLink
-                  v-if="item.type === 'link'"
-                  :href="item.text"
-                  :text="item.text"
-                  color="#fff"
-                />
-                <span v-else class="text-lg font-bold text-white inline">{{
-                  item.text
-                }}</span>
-              </template>
             </template>
           </div>
 
           <!-- 右侧轮播 -->
           <div
             class="w-[55%] h-full relative flex flex-col items-center justify-start justify-center"
+            @mouseenter="hovering = true"
+            @mouseleave="hovering = false"
           >
             <!-- 轮播图片区域 -->
             <div
               class="relative w-full h-[70%] overflow-hidden flex items-center justify-center"
-              @mouseenter="hovering = true"
-              @mouseleave="hovering = false"
             >
               <div
                 v-for="(img, imgIndex) in tab.images"
                 :key="img"
                 class="absolute transition-slide rounded-3xl shadow-lg"
                 :style="{
-                  width: '80%',
+                  width: '90%',
                   height: '100%',
                   transform: getTransform(index, imgIndex),
                   zIndex: getZIndex(index, imgIndex),
@@ -133,15 +101,15 @@
               >
                 <img
                   :src="img"
-                  class="w-full h-full object-cover rounded-3xl"
+                  class="w-full h-full object-cover rounded-3xl cursor-zoom-in bg-black"
                   draggable="false"
+                  @click="openImageZoom(tab.images, imgIndex)"
                 />
               </div>
             </div>
 
             <!-- 小圆点 + 按钮容器 -->
             <div class="mt-4 w-full flex justify-between items-center px-4">
-              <!-- 小圆点居中 -->
               <div class="flex gap-2 justify-center flex-1">
                 <span
                   v-for="(img, dotIndex) in tab.images"
@@ -154,8 +122,6 @@
                   ]"
                 ></span>
               </div>
-
-              <!-- 左右按钮靠右 -->
               <div class="flex gap-2">
                 <button
                   class="bg-white/30 hover:bg-white/50 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300"
@@ -175,12 +141,16 @@
         </div>
       </div>
     </div>
+
+    <!-- 全局 ImageZoom 组件 -->
+    <ImageZoom :showThumb="false" ref="imageZoomRef" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { Motion } from "motion-v";
+import ImageZoom from "@/components/ImageZoom.vue";
 
 type ContentItem = {
   type: "text" | "inline" | "highlight" | "h3" | "link";
@@ -209,8 +179,7 @@ const tabs: Tab[] = [
       { type: "h3", text: "技术栈" },
       {
         type: "text",
-        text: `前端：vue3、Pinia、Tailwind CSS、Axios、Naive UI、Markdown
-后端：.NET 8 Web API、SqlSugar、SQLite、Redis、WebSocket、Swagger`,
+        text: `前端：vue3、Pinia、Tailwind CSS、Axios、Naive UI、Markdown\n后端：.NET 8 Web API、SqlSugar、SQLite、Redis、WebSocket、Swagger`,
       },
       { type: "h3", text: "链接" },
       { type: "text", text: "Gitee：" },
@@ -221,9 +190,13 @@ const tabs: Tab[] = [
       { type: "link", text: "https://gitee.com/leefugui/love-word" },
     ],
     images: [
-      "https://picsum.photos/id/1015/1200/700",
-      "https://picsum.photos/id/1016/1200/700",
-      "https://picsum.photos/id/1018/1200/700",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637973_02b813c6.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637978_445146f6.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637930_10d5d698.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637977_21d3d117.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637934_9f73266f.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637975_425afe68.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637935_71f6ff4c.png",
     ],
   },
   {
@@ -305,8 +278,6 @@ const contentStyle = (index: number) => {
     width: "100%",
     height: "100%",
     borderRadius: "1rem",
-    // background: "linear-gradient(to bottom right, #7c3aed, #8b5cf6)",
-    // background: "#146a7e",
     padding: "2rem",
     boxSizing: "border-box",
     fontWeight: "bold",
@@ -344,6 +315,17 @@ const getOpacity = (tabIndex: number, imgIndex: number) => {
   )
     return 1;
   return 0;
+};
+
+// ---------------------- ImageZoom 调用 ----------------------
+const imageZoomRef = ref<InstanceType<typeof ImageZoom> | null>(null);
+
+// 点击轮播图某张图片，打开 ImageZoom
+const openImageZoom = (images: string[], index: number) => {
+  if (imageZoomRef.value) {
+    imageZoomRef.value.setImages(images);
+    imageZoomRef.value.openZoomAt(index);
+  }
 };
 </script>
 
