@@ -78,6 +78,7 @@ const isHover = ref(false);
 
 .card-body {
   padding: 16px;
+  height: 100%;
 }
 
 .card-title {

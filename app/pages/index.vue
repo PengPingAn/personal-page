@@ -22,13 +22,13 @@
       </div>
       <ProjectTabs></ProjectTabs>
     </div>
+    <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
+      <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
+        ───随便拍拍───
+      </Text3d>
+    </div>
+    <DraggableCards></DraggableCards>
   </div>
-  <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
-    <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
-      ───随便拍拍───
-    </Text3d>
-  </div>
-  <DraggableCards></DraggableCards>
 </template>
 
 <script setup lang="ts">

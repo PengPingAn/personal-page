@@ -266,7 +266,7 @@ const onLeave = () => {
   gap: 6px;
   padding: 8px 0;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.05);
+  /* background: rgba(255, 255, 255, 0.05); */
 }
 
 .tag-item {
