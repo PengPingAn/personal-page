@@ -4,11 +4,10 @@
     :class="{ hover: isHover }"
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
-    :style="{
-      backgroundImage: image ? `url(${image})` : 'none',
-      backgroundColor: bgColor,
-    }"
   >
+    <!-- 毛玻璃背景 -->
+    <div class="card-blur"></div>
+
     <!-- 卡片主体 -->
     <div class="card-body">
       <h3 class="card-title">{{ title }}</h3>
@@ -38,36 +37,31 @@
 <script setup>
 import { ref } from "vue";
 
-// props
 defineProps({
   title: { type: String, default: "" },
   content: { type: String, default: "" },
-  image: { type: String, default: "" },
-  bgColor: { type: String, default: "#ffffff" },
   actions: {
     type: Array,
     default: () => [],
-    // 每个 action: { label: string, onClick: Function }
   },
 });
 
-// hover 状态
 const isHover = ref(false);
 </script>
 
 <style scoped>
 .card {
+  position: relative;
   width: 100%;
-  border: 1px solid #e5e5e5;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-  background-color: #fff;
   cursor: default;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  color: #fff;
+  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
+  -webkit-backdrop-filter: blur(15px);
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .card.hover {
@@ -75,14 +69,16 @@ const isHover = ref(false);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* 卡片内容层 */
+.card-body,
+.card-footer {
+  position: relative;
+  z-index: 1;
 }
 
 .card-body {
   padding: 16px;
+  height: 100%;
 }
 
 .card-title {
@@ -94,12 +90,11 @@ const isHover = ref(false);
 .card-content {
   margin: 0;
   font-size: 14px;
-  color: #555;
+  color: #fff;
 }
 
 .card-footer {
   padding: 12px 16px;
-  border-top: 1px solid #eee;
   display: flex;
   gap: 8px;
   justify-content: flex-end;
@@ -108,7 +103,7 @@ const isHover = ref(false);
 .card-btn {
   padding: 6px 12px;
   border: none;
-  background-color: #409eff;
+  background-color: rgba(255, 255, 255, 0.2);
   color: #fff;
   border-radius: 6px;
   cursor: pointer;
@@ -116,6 +111,6 @@ const isHover = ref(false);
 }
 
 .card-btn:hover {
-  background-color: #66b1ff;
+  background-color: rgba(255, 255, 255, 0.3);
 }
 </style>

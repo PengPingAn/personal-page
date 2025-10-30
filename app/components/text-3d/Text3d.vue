@@ -7,6 +7,7 @@
         props.class
       )
     "
+    style="z-index: 1; position: relative"
   >
     <slot></slot>
   </div>

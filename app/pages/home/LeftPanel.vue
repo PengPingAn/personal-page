@@ -1,12 +1,12 @@
 <template>
   <div class="left-panel">
     <!-- 头像 -->
-    <div class="relative w-32 h-32 opacity-0 transform translate-y-10" ref="avatarRef">
-      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full z-20">
+    <div class="relative w-48 h-48" ref="avatarRef">
+      <!-- 头像 SVG -->
+      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full z-10">
         <defs>
           <filter id="bubbleWarp">
             <feTurbulence
-              id="turbulence"
               type="fractalNoise"
               baseFrequency="0.02 0.03"
               numOctaves="3"
@@ -43,6 +43,13 @@
           stroke-width="1.5"
         />
       </svg>
+
+      <!-- 挂件 GIF -->
+      <img
+        :src="headPendant"
+        class="absolute -top-[30px] -left-[21px] z-20 w-48"
+        alt="挂件"
+      />
     </div>
 
     <!-- 文字区域 -->
@@ -149,6 +156,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import headPendant from "../../../public/img/headPendant.gif";
 
 const imgUlrs = ref([
   "https://img1.fjdaily.com/app/images/2024-05/20/7f9815fd-3570-46ab-ba84-8ed3eee95810.jpg",

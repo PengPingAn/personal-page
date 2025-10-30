@@ -1,6 +1,6 @@
 <template>
   <span class="hover-card-wrapper">
-    <!-- 触发元素：position relative -->
+    <!-- 触发元素 -->
     <span
       ref="triggerRef"
       class="hover-card-trigger"
@@ -10,7 +10,7 @@
       <slot name="trigger"></slot>
     </span>
 
-    <!-- 卡片 teleport 到 body（避免被父容器遮挡） -->
+    <!-- 卡片 teleport 到 body -->
     <teleport to="body">
       <transition name="fade-up">
         <div
@@ -29,28 +29,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, onUnmounted, onMounted } from "vue";
-
-/**
- * 最小改动版 HoverCard
- * - teleport -> 避免 stacking-context 遮挡
- * - 采用短延时 hide 逻辑，避免鼠标在 trigger <-> card 之间抖动导致误隐藏
- * - 位置在 nextTick 后计算，防止第一次渲染位置闪动
- */
+import { ref, reactive, nextTick, onMounted, onUnmounted } from "vue";
 
 const triggerRef = ref<HTMLElement | null>(null);
 const cardRef = ref<HTMLElement | null>(null);
 
 const visible = ref(false);
-const inside = ref(false); // 鼠标是否在卡片内
+const inside = ref(false);
 let hideTimer: number | null = null;
+const firstPositioned = ref(false); // 标记首次已初始化位置
 
 const cardStyle = reactive({
   position: "absolute",
   top: "0px",
   left: "0px",
   zIndex: 9999,
-  // 不在这里写 transform/translateY，让 CSS transition 控制动画
+  maxHeight: "80vh",
+  overflowY: "auto",
+  transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
 });
 
 function clearHideTimer() {
@@ -60,35 +56,25 @@ function clearHideTimer() {
   }
 }
 
-// 触发进入
 async function onTriggerEnter() {
   clearHideTimer();
-  // 先显示，再定位（nextTick），避免卡片无法定位或闪烁
   visible.value = true;
+
   await nextTick();
-  positionCard();
+
+  if (!firstPositioned.value) {
+    // 首次显示，直接定位，去掉动画
+    cardStyle.transition = "none";
+    positionCard();
+    firstPositioned.value = true;
+    await nextTick();
+    cardStyle.transition = "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)";
+  } else {
+    positionCard();
+  }
 }
 
-// 触发离开——延迟隐藏，给予转移到卡片的缓冲窗口
-function onTriggerLeave(event?: MouseEvent) {
-  clearHideTimer();
-  hideTimer = window.setTimeout(() => {
-    // 如果仍在卡片内（inside），则不隐藏
-    if (!inside.value) visible.value = false;
-    hideTimer = null;
-  }, 80); // 80ms 缓冲，可微调
-}
-
-// 卡片进入（鼠标移动到卡片上）
-function onCardEnter() {
-  inside.value = true;
-  clearHideTimer();
-}
-
-// 卡片离开（移出卡片）
-function onCardLeave() {
-  inside.value = false;
-  // 小延时隐藏，允许快速回到 trigger
+function onTriggerLeave() {
   clearHideTimer();
   hideTimer = window.setTimeout(() => {
     if (!inside.value) visible.value = false;
@@ -96,40 +82,74 @@ function onCardLeave() {
   }, 80);
 }
 
-// 计算卡片位置（左对齐、紧贴触发元素下方）
+function onCardEnter() {
+  inside.value = true;
+  clearHideTimer();
+}
+
+function onCardLeave() {
+  inside.value = false;
+  clearHideTimer();
+  hideTimer = window.setTimeout(() => {
+    if (!inside.value) visible.value = false;
+    hideTimer = null;
+  }, 80);
+}
+
 function positionCard() {
   const trigger = triggerRef.value;
   const card = cardRef.value;
   if (!trigger || !card) return;
 
   const rect = trigger.getBoundingClientRect();
-  // left：触发元素 left（左对齐）
-  // top：trigger bottom + 8px（微间距），考虑滚动条位移
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
   const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  const margin = 8;
 
-  cardStyle.left = rect.left + scrollX + "px";
-  cardStyle.top = rect.bottom + scrollY + 8 + "px";
+  // 先计算默认位置：下方
+  let top = rect.bottom + scrollY + margin;
+  const left = rect.left + scrollX;
 
-  // 限制不要溢出右边界（若超出，则向左调整）
+  const windowHeight = window.innerHeight;
+  const windowWidth = window.innerWidth;
+
   nextTick(() => {
     const cardRect = card.getBoundingClientRect();
-    const margin = 8;
-    if (cardRect.right > window.innerWidth - margin) {
-      const overflow = cardRect.right - (window.innerWidth - margin);
-      const leftPx = (parseFloat(cardStyle.left) || 0) - overflow;
-      cardStyle.left = Math.max(margin, leftPx) + "px";
+    // 下方空间不足，上方显示
+    const spaceBelow = windowHeight - rect.bottom;
+    if (spaceBelow < cardRect.height + margin) {
+      const spaceAbove = rect.top;
+      if (spaceAbove > cardRect.height + margin) {
+        top = rect.top + scrollY - cardRect.height - margin;
+      } else {
+        // 上下都不够，高度自适应
+        const maxH = Math.max(spaceAbove, spaceBelow) - margin;
+        cardStyle.maxHeight = maxH + "px";
+        top = rect.bottom + scrollY + margin;
+      }
+    } else {
+      cardStyle.maxHeight = "80vh"; // 恢复默认最大高度
     }
+
+    // 防止右边溢出
+    if (cardRect.right > windowWidth - margin) {
+      const overflow = cardRect.right - (windowWidth - margin);
+      cardStyle.left = Math.max(margin, left - overflow) + "px";
+    } else {
+      cardStyle.left = left + "px";
+    }
+
+    cardStyle.top = top + "px";
   });
 }
 
-// 当窗口滚动或尺寸变化时更新位置（若可见）
+// 窗口滚动/尺寸变化更新位置
 function onWindowChange() {
   if (visible.value) positionCard();
 }
 
 onMounted(() => {
-  window.addEventListener("scroll", onWindowChange, true); // 捕获阶段
+  window.addEventListener("scroll", onWindowChange, true);
   window.addEventListener("resize", onWindowChange);
 });
 
@@ -142,7 +162,6 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .hover-card-wrapper {
   display: inline-block;
-  /* 不要设 width:100% ——保持原始行为 */
 }
 
 .hover-card-trigger {
@@ -151,13 +170,10 @@ onUnmounted(() => {
   align-items: center;
 }
 
-/* 保持原始样式（你已有的样式） */
 .hover-card-content {
-  position: absolute; /* 但最终用 teleport 时，这只是语义，样式仍适用 */
-  top: 100%; /* 如果没有 teleport 时仍兼容（不影响） */
-  left: 0;
-  margin-top: 8px;
-  min-width: max-content; /* 宽度随内容扩展 */
+  width: max-content;
+  position: absolute;
+  min-width: max-content;
   max-width: 90vw;
   background: #eedcdc;
   color: var(--font-color);
@@ -166,13 +182,14 @@ onUnmounted(() => {
   padding: 10px;
   font-size: 14px;
   line-height: 1.4rem;
-  z-index: 9999; /* 高z */
+  z-index: 9999;
   white-space: normal;
   word-break: break-word;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  overflow-y: auto;
 }
 
-/* 保留你原来的动画：自下而上出现，自上而下消失 */
+/* 保留原有动画 */
 .fade-up-enter-active,
 .fade-up-leave-active {
   transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
