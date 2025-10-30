@@ -74,16 +74,35 @@ onMounted(async () => {
 .container {
   width: 100%;
   --color: #e1e1e1;
-
+  background-color: #f3f3f3;
+  background-image: linear-gradient(
+      0deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    );
   background-size: 55px 55px;
   border-radius: 1rem;
   padding: 1rem;
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
-  -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-  border: 1px solid rgba(255, 255, 255, 0.2);
   max-width: none !important;
-  color: #fff;
 }
 
 .text-title {
@@ -136,7 +155,6 @@ onMounted(async () => {
   align-items: flex-start;
   user-select: none;
   will-change: opacity, transform;
-  color: #fff;
 }
 .task-checkbox {
   display: none;
@@ -211,11 +229,10 @@ onMounted(async () => {
   flex: 1;
   display: inline-block;
   transition: all 0.3s ease;
-  color: #f9f9f9;
 }
 .text-completed {
   text-decoration: line-through;
-  color: #f9f9f9;
+  color: #6b7280;
 }
 
 .task-checkbox:checked + .checkbox-label .checkbox-box {

@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-[150px] text-[#FFF]">
+  <div class="min-h-[150px]">
     <div class="flex gap-4 mb-4">
       <div class="h-auto w-[2px] bg-[#e16060]"></div>
       <span class="font-bold text-xl">
         2025
-        <span class="text-xs text-[#FFF]"> （{{ timelineData?.length ?? 0 }}） </span>
+        <span class="text-xs text-[#646464]"> （{{ timelineData?.length ?? 0 }}） </span>
       </span>
     </div>
 
@@ -23,16 +23,16 @@
             index !== visibleItems.length - 1 ? 'after-line' : '',
           ]"
         >
-          <div class="w-2 h-2 bg-gray-700 bg-[#fff] rounded-full z-10"></div>
+          <div class="w-2 h-2 bg-gray-700 rounded-full z-10"></div>
         </div>
 
         <!-- 内容 -->
         <div
-          class="flex justify-between w-full border-b border-gray-200 items-center text-[15px] text-[#FFF] leading-8"
+          class="flex justify-between w-full border-b border-gray-200 items-center text-[15px] text-[#646464] leading-8"
         >
           <!-- 左侧文字 -->
           <div class="flex gap-4 items-center cursor-pointer">
-            <div class="text-sm">
+            <div class="text-sm text-gray-500">
               <template v-if="!item.loaded">
                 <span
                   class="skeleton-text"
@@ -53,7 +53,7 @@
           </div>
 
           <!-- 右侧信息 -->
-          <div class="text-sm flex gap-2 items-center">
+          <div class="text-sm text-gray-500 flex gap-2 items-center">
             <template v-if="!item.loaded">
               <span
                 class="skeleton-text"
@@ -154,7 +154,7 @@ function getRandomWidth(min: number, max: number) {
   content: "";
   position: absolute;
   width: 1px;
-  background-color: #fff;
+  background-color: #d1d5db;
   left: 50%;
   transform: translateX(-50%);
 }

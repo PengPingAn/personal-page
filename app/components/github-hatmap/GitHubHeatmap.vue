@@ -177,7 +177,7 @@ const legendColors = [
 .month-label {
   position: absolute;
   font-size: 12px;
-  color: #fff;
+  color: #666;
 }
 
 /* 热力图列 */
@@ -229,7 +229,7 @@ const legendColors = [
   right: 0px;
   bottom: -1.5rem;
   font-size: 12px;
-  color: #fff;
+  color: #666;
 }
 .legend-colors {
   display: flex;

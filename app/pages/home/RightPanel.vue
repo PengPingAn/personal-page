@@ -19,17 +19,13 @@
 
     <Card class="my-4">
       <template #default>
-        <p class="my-4 text-xl text-center flex gap-2 justify-center text-[#FFF]">
-          <span class="system-uicons--book-text"></span>
-          近期的一些文章
+        <p class="my-4 text-xl text-center flex gap-2 justify-center">
+          <span class="material-symbols-light--menu-book-outline-sharp"></span
+          >近期的一些文章
         </p>
         <TimelineArticle></TimelineArticle>
         <div class="my-4 text-right">
-          <HoverLink
-            href="https://www.example.com"
-            color="#FFF"
-            text="还有更多，去看看？"
-          />
+          <HoverLink href="https://www.example.com" text="还有更多，去看看？" />
         </div>
       </template>
     </Card>
@@ -76,10 +72,10 @@
         <div class="flex gap-4">
           <Card class="flex-[3] h-48">
             <div
-              class="relative sayText quote-text m-8 text-4xl text-[#FFF] flex justify-center"
+              class="relative sayText quote-text m-8 text-4xl text-gray-800 flex justify-center"
             >
               <div>
-                <span style="color: #36ddad">纵有疾风起</span>
+                <span style="color: rgb(143 143 143)">纵有疾风起</span>
                 <br />
                 <span>人生不言弃</span>
               </div>

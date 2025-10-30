@@ -29,124 +29,117 @@
 
     <!-- 放大模态框 -->
     <transition name="fade">
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center touch-none"
-      >
-        <!-- 背景 -->
-        <div class="absolute inset-0 bg-black bg-opacity-60 z-0" @click="closeZoom"></div>
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <!-- 背景层 -->
+        <!-- 背景层：固定不动 -->
+        <div class="absolute inset-0 bg-black bg-opacity-90 z-0" @click="closeZoom"></div>
 
-        <!-- 图片层 -->
-        <transition :name="isMobile ? '' : slideDirection" mode="out-in">
+        <!-- 图片层：动画切换 -->
+        <transition :name="slideDirection" mode="out-in">
           <div :key="currentIndex" @click.stop class="flex justify-center">
             <img
               :src="currentImage"
               :alt="alt"
               ref="zoomedImage"
               :style="innerStyle"
-              class="max-w-[80vw] max-h-[80vh] block cursor-grab touch-pan-y"
+              class="max-w-[80vw] block cursor-grab"
               draggable="false"
               @mousedown="startDrag"
               @mousemove="onDrag"
               @mouseup="endDrag"
               @mouseleave="endDrag"
               @wheel.prevent="onWheel"
-              @touchstart.passive="onTouchStart"
-              @touchmove.passive="onTouchMove"
-              @touchend.passive="onTouchEnd"
+              @click.stop
             />
           </div>
         </transition>
 
-        <!-- PC端按钮 -->
-        <template v-if="!isMobile">
-          <!-- 关闭 -->
-          <button
-            class="absolute top-5 right-5 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
-            @click="closeZoom"
+        <!-- 关闭按钮 -->
+        <button
+          class="absolute top-5 right-5 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
+          @click="closeZoom"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-6 h-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
 
-          <!-- 左右切换 -->
-          <button
-            class="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
-            @click.stop="prevImage"
+        <!-- 左右导航按钮（永远显示） -->
+        <button
+          class="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
+          @click.stop="prevImage"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-6 h-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            class="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
-            @click.stop="nextImage"
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <button
+          class="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-40 transition z-20"
+          @click.stop="nextImage"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-6 h-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
 
-          <!-- 缩放控制 -->
-          <div
-            class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-3 bg-white bg-opacity-20 rounded-full p-2 backdrop-blur z-20"
+        <!-- 缩放控制 -->
+        <div
+          class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-3 bg-white bg-opacity-20 rounded-full p-2 backdrop-blur z-20"
+        >
+          <button
+            class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
+            @click="zoomOut"
+            :disabled="scale <= minScale"
           >
-            <button
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
-              @click="zoomOut"
-              :disabled="scale <= minScale"
-            >
-              <span class="text-white text-xl">−</span>
-            </button>
-            <button
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
-              @click="resetZoom"
-            >
-              <span class="text-white text-xl">↺</span>
-            </button>
-            <button
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
-              @click="zoomIn"
-              :disabled="scale >= maxScale"
-            >
-              <span class="text-white text-xl">+</span>
-            </button>
-          </div>
-        </template>
+            <span class="text-white text-xl">−</span>
+          </button>
+          <button
+            class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
+            @click="resetZoom"
+          >
+            <span class="text-white text-xl">↺</span>
+          </button>
+          <button
+            class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-30 transition"
+            @click="zoomIn"
+            :disabled="scale >= maxScale"
+          >
+            <span class="text-white text-xl">+</span>
+          </button>
+        </div>
 
         <!-- 缩放百分比 -->
         <div
@@ -155,7 +148,15 @@
           {{ Math.round(scale * 100) }}%
         </div>
 
-        <!-- 提示 -->
+        <!-- 图片计数 -->
+        <div
+          v-if="images.length > 1"
+          class="absolute top-5 left-5 bg-white bg-opacity-20 rounded-full px-3 py-1 text-white text-sm z-20"
+        >
+          {{ currentIndex + 1 }} / {{ images.length }}
+        </div>
+
+        <!-- 提示文本 -->
         <div
           v-if="showTip"
           class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg bg-black bg-opacity-50 px-4 py-2 rounded z-30"
@@ -191,18 +192,14 @@ const scale = ref(1);
 const offset = reactive({ x: 0, y: 0 });
 const isDragging = ref(false);
 const dragStart = reactive({ x: 0, y: 0 });
+
 const zoomedImage = ref<HTMLImageElement | null>(null);
+
 const currentIndex = ref(0);
 const externalImages = ref<string[]>([]);
-const showTip = ref("");
 
-// PC/H5判定
-const isMobile = ref(false);
-onMounted(() => {
-  isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-});
+const slideDirection = ref("slide-left"); // 图片切换动画方向
+const showTip = ref(""); // 提示文本
 
 const images = computed(() =>
   externalImages.value.length
@@ -214,13 +211,11 @@ const images = computed(() =>
 const currentImage = computed(() => images.value[currentIndex.value]);
 
 const innerStyle = computed(() => ({
-  transform: `translate(${offset.x}px,${offset.y}px) scale(${scale.value})`,
+  transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale.value})`,
   transformOrigin: "center center",
   transition: isDragging.value ? "none" : "transform 0.25s ease",
   display: "block",
 }));
-
-const slideDirection = ref("slide-left");
 
 const openZoom = async () => {
   isOpen.value = true;
@@ -232,20 +227,21 @@ const closeZoom = () => {
   document.body.style.overflow = "";
   resetZoom();
 };
-
 const resetZoom = () => {
   scale.value = 1;
   offset.x = 0;
   offset.y = 0;
 };
 const zoomIn = () => {
-  scale.value = Math.min(scale.value + (props.zoomStep ?? 0.2), props.maxScale!);
+  if (scale.value < props.maxScale)
+    scale.value = Math.min(scale.value + props.zoomStep!, props.maxScale!);
 };
 const zoomOut = () => {
-  scale.value = Math.max(scale.value - (props.zoomStep ?? 0.2), props.minScale!);
+  if (scale.value > props.minScale)
+    scale.value = Math.max(scale.value - props.zoomStep!, props.minScale!);
 };
+
 const onWheel = (e: WheelEvent) => {
-  if (isMobile.value) return;
   const delta = e.deltaY < 0 ? 1 : -1;
   scale.value = Math.min(
     Math.max(scale.value + delta * (props.zoomStep ?? 0.2), props.minScale!),
@@ -270,43 +266,6 @@ const endDrag = () => {
   isDragging.value = false;
 };
 
-// H5 手势
-let lastDistance = 0;
-const onTouchStart = (e: TouchEvent) => {
-  if (e.touches.length === 1) {
-    isDragging.value = true;
-    dragStart.x = e.touches[0].clientX - offset.x;
-    dragStart.y = e.touches[0].clientY - offset.y;
-  } else if (e.touches.length === 2) {
-    lastDistance = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-  }
-};
-const onTouchMove = (e: TouchEvent) => {
-  if (e.touches.length === 1 && isDragging.value) {
-    offset.x = e.touches[0].clientX - dragStart.x;
-    offset.y = e.touches[0].clientY - dragStart.y;
-  } else if (e.touches.length === 2) {
-    const distance = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-    const delta = distance - lastDistance;
-    scale.value = Math.min(
-      Math.max(scale.value + delta * 0.005, props.minScale!),
-      props.maxScale!
-    );
-    lastDistance = distance;
-  }
-};
-const onTouchEnd = (e: TouchEvent) => {
-  isDragging.value = false;
-  lastDistance = 0;
-};
-
-// PC 切换
 const prevImage = () => {
   if (currentIndex.value > 0) {
     slideDirection.value = "slide-right";
@@ -317,6 +276,7 @@ const prevImage = () => {
     setTimeout(() => (showTip.value = ""), 1500);
   }
 };
+
 const nextImage = () => {
   if (currentIndex.value < images.value.length - 1) {
     slideDirection.value = "slide-left";
@@ -328,9 +288,9 @@ const nextImage = () => {
   }
 };
 
-// PC 键盘
+// 键盘操作
 const onKeydown = (e: KeyboardEvent) => {
-  if (!isOpen.value || isMobile.value) return;
+  if (!isOpen.value) return;
   switch (e.key) {
     case "Escape":
       closeZoom();
@@ -376,6 +336,7 @@ defineExpose({ setImages, openZoomAt });
 .fade-leave-to {
   opacity: 0;
 }
+
 .pointer-grab {
   cursor: grab;
 }

@@ -357,7 +357,7 @@ button {
   width: 100%;
   height: 100%;
   --color: rgba(114, 114, 114, 0.3);
-  /* background-color: #191a1a;
+  background-color: #191a1a;
   background-image: linear-gradient(
       0deg,
       transparent 24%,
@@ -382,11 +382,6 @@ button {
       transparent 77%,
       transparent
     );
-  background-size: 55px 55px; */
-
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
-  -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-size: 55px 55px;
 }
 </style>

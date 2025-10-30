@@ -3,7 +3,7 @@
     <transition-group
       name="list"
       tag="div"
-      class="flex flex-col-reverse items-center gap-3 text-[#000]"
+      class="flex flex-col-reverse items-center gap-3"
       move-class="move"
     >
       <!-- Only render the items up to the current index -->
