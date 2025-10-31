@@ -1,7 +1,8 @@
+// plugins/toast.client.ts
 import { defineNuxtPlugin } from "#app";
 import useToastComposable from "~/composables/useToast";
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const { addToast } = useToastComposable();
 
   const toast = {
@@ -19,9 +20,12 @@ export default defineNuxtPlugin(() => {
     },
   };
 
-  if (typeof window !== "undefined") {
-    // 挂在全局
-    window.toast = toast;
-    // 或者 globalThis.toast = toast;
+  // Nuxt 全局注入
+  nuxtApp.provide("toast", toast);
+
+  // 挂到 window/globalThis，方便 Axios 拦截器使用
+  if (process.client) {
+    window.$toast = toast;
+    globalThis.$toast = toast;
   }
 });

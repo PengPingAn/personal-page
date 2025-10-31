@@ -1,7 +1,7 @@
 <template>
   <div class="left-panel">
     <!-- 头像 -->
-    <div class="relative w-48 h-48" ref="avatarRef">
+    <div class="relative w-48 h-48" ref="avatarRef" @dblclick="jumpAdmin">
       <!-- 头像 SVG -->
       <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full z-10">
         <defs>
@@ -171,8 +171,13 @@ const avatarRef = ref<HTMLElement>();
 const textRef = ref<HTMLElement>();
 const buttonRefs = ref<HTMLElement[]>([]);
 const coffeeBtnRef = ref<HTMLElement | null>(null);
+const router = useRouter();
 
 const cardStyle = reactive({ left: "0px", top: "0px" });
+
+const jumpAdmin = () => {
+  router.push("/admin/layout");
+};
 
 onMounted(() => {
   interval = window.setInterval(() => {

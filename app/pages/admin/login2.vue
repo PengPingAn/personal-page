@@ -1,27 +1,29 @@
 <template>
-  <div class="container-wrapper">
+  <div :class="['container-wrapper', { 'dark-mode': isDarkMode }]">
+    <!-- 暗黑模式切换按钮 -->
+    <button class="dark-toggle" @click="toggleDarkMode">
+      {{ isDarkMode ? "🌞" : "🌙" }}
+    </button>
+
     <div class="container">
       <!-- Left Section -->
       <div class="left-section">
-        <!-- Content -->
         <div class="content">
           <h1 class="title">LOG IN<span class="title-dot">.</span></h1>
 
           <!-- Form -->
           <form class="form" @submit.prevent="handleSubmit">
-            <!-- Email -->
+            <!-- Account -->
             <div class="input-group">
               <label class="input-label">Account</label>
               <div class="input-wrapper">
                 <input
                   autofocus
-                  type="email"
                   class="input-field"
-                  v-model="email"
+                  v-model="account"
                   @focus="handleFocus($event)"
                   @blur="handleBlur($event)"
                 />
-
                 <span class="input-icon"><span class="mdi-light--account"></span></span>
               </div>
             </div>
@@ -90,135 +92,171 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "~/stores/pinia";
 
-// Name fields
-const nameFields = reactive([
-  { label: "First name", value: "Michał" },
-  { label: "Last name", value: "Masiak" },
-]);
+const userStore = useUserStore();
+const { $toast } = useNuxtApp();
 
-const email = ref("");
-const password = ref("");
+const router = useRouter();
+const account = ref("admin");
+const password = ref("123456");
 const showPassword = ref(false);
+const isDarkMode = ref(false);
+
+// 暗黑模式切换
+function toggleDarkMode() {
+  isDarkMode.value = !isDarkMode.value;
+  localStorage.setItem("darkMode", isDarkMode.value ? "1" : "0");
+}
+
+onMounted(() => {
+  isDarkMode.value = localStorage.getItem("darkMode") === "1";
+});
 
 function togglePassword() {
   showPassword.value = !showPassword.value;
 }
 
-function handleSubmit() {
-  console.log("Form submitted!");
-  console.log({
-    firstName: nameFields[0].value,
-    lastName: nameFields[1].value,
-    email: email.value,
-    password: password.value,
-  });
-  window.toast?.success("登录成功，正在进入系统！");
-}
+const handleSubmit = async () => {
+  if (!account.value || !password.value) {
+    $toast?.warning("账号或密码为空！");
+    return;
+  }
+  try {
+    let res = await $request.Post("/auth/login", {
+      account: account.value,
+      password: password.value,
+    });
+    if (res.code === 200) {
+      $toast?.success("登录成功，正在进入系统！");
+      userStore.setToken(res.data.token);
+      setTimeout(() => {
+        router.push("/admin/layout");
+      }, 500);
+    }
+  } catch (err: any) {
+    console.error("请求失败:", err.message);
+  }
+};
 
 // Focus effects
-function handleFocus(e) {
-  e.target.parentElement.parentElement.style.transform = "translateY(-2px)";
+function handleFocus(e: FocusEvent) {
+  (e.target as HTMLElement).parentElement!.parentElement!.style.transform =
+    "translateY(-2px)";
 }
-function handleBlur(e) {
-  e.target.parentElement.parentElement.style.transform = "translateY(0)";
+function handleBlur(e: FocusEvent) {
+  (e.target as HTMLElement).parentElement!.parentElement!.style.transform =
+    "translateY(0)";
 }
 </script>
 
-<style lang="css" scoped>
+<style scoped>
+/* ===== Container & Dark Mode ===== */
 .container-wrapper {
-  /* background: linear-gradient(135deg, #e8eaf6 0%, #f5f5f5 100%); */
   background-color: #fff;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  position: relative;
+  transition: background-color 0.3s, color 0.3s;
   width: 100vw;
 }
 
+.dark-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: #e0e0e0;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 1000;
+  font-size: 16px;
+}
+
+.dark-mode {
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+}
+
+.dark-mode .container {
+  background-color: #2c2c2c;
+}
+
+.dark-mode .title {
+  color: #f5f5f5;
+}
+
+.dark-mode .title-dot {
+  color: #42a5f5;
+}
+
+.dark-mode .input-field {
+  background-color: #3a3a3a;
+  color: #f5f5f5;
+  border-color: #555;
+}
+
+.dark-mode .input-field:focus {
+  background-color: #2c2c2c;
+  border-color: #4285f4;
+}
+
+.dark-mode .password-field {
+  border-color: #00bcd4;
+}
+
+.dark-mode .login-button {
+  background-color: #3d405b;
+  color: #f5f5f5;
+}
+
+.dark-mode .divider-line path {
+  stroke: #555;
+}
+
+.dark-mode .logo-dot,
+.dark-mode .logo-bar {
+  background: #f5f5f5;
+}
+
+.dark-mode .mountain-image {
+  filter: brightness(0.7) contrast(1.2);
+}
+
+/* ===== Container ===== */
 .container {
   width: 100%;
   max-width: 800px;
-  background: white;
   border-radius: 32px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   display: grid;
   grid-template-columns: 1fr 1fr;
   overflow: hidden;
   position: relative;
-  /* min-height: 700px; */
 }
 
-/* Left section */
+/* Left Section */
 .left-section {
   padding: 60px 80px;
   position: relative;
   z-index: 2;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 40px;
-}
-
-.logo-circle {
-  width: 32px;
-  height: 32px;
-  background: #4285f4;
-  border-radius: 50%;
-}
-
-.logo-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #000;
-}
-
-.nav {
-  position: absolute;
-  top: 60px;
-  right: 80px;
-  display: flex;
-  gap: 32px;
-}
-
-.nav a {
-  color: #b0b0b0;
-  text-decoration: none;
-  font-size: 15px;
-  transition: color 0.3s;
-}
-
-.nav a:hover {
-  color: #4285f4;
-}
-
 .content {
   margin-top: 80px;
-}
-
-.subtitle {
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: #b0b0b0;
-  font-weight: 500;
-  margin-bottom: 16px;
 }
 
 .title {
   font-size: 48px;
   font-weight: 700;
-  color: #000;
   margin-bottom: 20px;
   line-height: 1.2;
 }
@@ -227,28 +265,9 @@ function handleBlur(e) {
   color: #4285f4;
 }
 
-.login-link {
-  color: #9e9e9e;
-  font-size: 15px;
-  margin-bottom: 40px;
-  display: block;
-}
-
-.login-link a {
-  color: #4285f4;
-  text-decoration: none;
-  font-weight: 500;
-}
-
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
@@ -287,11 +306,6 @@ function handleBlur(e) {
   background: white;
 }
 
-.input-field.password-field {
-  border-color: #00bcd4;
-  background: white;
-}
-
 .input-icon {
   position: absolute;
   right: 16px;
@@ -303,7 +317,6 @@ function handleBlur(e) {
 .button-group {
   display: flex;
   gap: 16px;
-  margin-top: 20px;
   justify-content: center;
 }
 
@@ -319,7 +332,6 @@ function handleBlur(e) {
   width: 130px;
   transition: all 0.5s;
   cursor: pointer;
-  margin: 5px;
 }
 
 button span {
@@ -347,7 +359,7 @@ button span {
   right: 0;
 }
 
-/* Right section */
+/* Right Section */
 .right-section {
   position: relative;
   overflow: visible;
@@ -355,14 +367,10 @@ button span {
 
 .image-container {
   position: absolute;
-  top: 0px;
+  top: 0;
   right: -40px;
   bottom: -40px;
   width: 100%;
-  /* clip-path: path("M 150 0 Q 100 150, 150 300 T 150 600 T 150 900 L 800 900 L 800 0 Z"); */
-  /* clip-path: path(
-    "M 249 0 C 343 163, 80 200, 224 300 S 60 400, 150 600 S 70 800, 160 900 L 1000 900 L 1000 0 Z"
-  ); */
   clip-path: path(
     "M296 0 C50 88,338 114,169 185 S327 288,170 344 S131 383,27 481 S190 581,177 638 S205 750,200 800 L400 900 L400 0 Z"
   );
@@ -372,6 +380,7 @@ button span {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: filter 0.3s;
 }
 
 .divider-line {
@@ -431,11 +440,6 @@ button span {
 
   .left-section {
     padding: 40px;
-  }
-
-  .nav {
-    position: static;
-    margin-bottom: 40px;
   }
 }
 </style>
