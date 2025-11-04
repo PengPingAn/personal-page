@@ -6,6 +6,7 @@ import Toast from "./components/Toast.vue";
   <div class="page-container flex flex-col w-full min-h-screen gap-4">
     <!-- 模糊层 -->
     <div class="blur-bg"></div>
+    <!-- <div class="firefly-container" ref="fireflyContainer" aria-hidden="true"></div> -->
 
     <div class="flex flex-col xl:flex-row w-full gap-4 min-w-0">
       <!-- 主页面内容 -->
@@ -60,6 +61,46 @@ body > *:not(.blur-bg) {
   }
   50% {
     transform: rotate(5deg);
+  }
+}
+
+.firefly-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+  background: transparent;
+  overflow: hidden;
+}
+
+.firefly {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, #f3f3ef 0%, #dfdddd 40%, transparent 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px 1px #ffaa00;
+  opacity: 0;
+  animation: fadeIn 0.07s ease-out forwards, blink 2.5s infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.3);
   }
 }
 </style>

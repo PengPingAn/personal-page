@@ -63,7 +63,7 @@
       </div>
 
       <div style="font-size: 40px">
-        开发者，
+        开发者 ，
         <ResizableDashedLabel
           text=" <平安/>"
           :enabled="true"

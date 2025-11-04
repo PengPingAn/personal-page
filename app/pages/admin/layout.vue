@@ -7,6 +7,10 @@
       ></span>
     </div>
 
+    <div class="theme-toggle" style="bottom: 5rem" @click="jumpHome">
+      <span :class="isDarkMode ? 'tabler--home-dark' : 'tabler--home-light'"></span>
+    </div>
+
     <!-- 移动端侧边栏切换按钮 -->
     <div class="mobile-sidebar-toggle" @click="toggleMobileSidebar">
       <i class="fas fa-bars"></i>
@@ -173,6 +177,10 @@ const toggleTheme = () => {
   localStorage.setItem("darkMode", isDarkMode.value ? "1" : "0");
 };
 
+const jumpHome = () => {
+  router.push("/");
+};
+
 // 移动端侧边栏切换
 const toggleMobileSidebar = () => {
   mobileSidebarOpen.value = !mobileSidebarOpen.value;
@@ -201,6 +209,31 @@ const handleLogout = () => {
   userStore.logout();
   // 还可以跳转到登录页
   router.push("/admin/login");
+};
+
+const saveFile = async () => {
+  if (
+    selectedFileIndex.value &&
+    (selectedFileIndex.value < 0 || selectedFileIndex.value >= jsonFiles.value.length)
+  )
+    return;
+
+  const fileName = jsonFiles.value[selectedFileIndex.value];
+  console.log(fileName, selectedFile.value.content);
+
+  try {
+    const res = await $request.Post("/file/update", {
+      file: fileName.split(".")[0],
+      data: selectedFile.value.content,
+    });
+    if (res.code === 200) {
+      $toast?.success("修改成功");
+    } else {
+      $toast?.error("修改失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
 };
 
 // 初始化

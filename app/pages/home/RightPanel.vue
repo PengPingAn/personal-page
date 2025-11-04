@@ -39,6 +39,7 @@
         <Card
           style="height: 100%; width: 200px"
           class="group relative overflow-hidden bg-transparent border-0"
+          :body-class="['justify-center', 'items-center', 'flex']"
         >
           <!-- 背景图片 -->
           <div
@@ -81,6 +82,7 @@
               <div>
                 <span style="color: #36ddad">纵有疾风起</span>
                 <br />
+
                 <span>人生不言弃</span>
               </div>
             </div>
@@ -99,7 +101,7 @@
 
         <div class="flex gap-4">
           <div class="w-fit">
-            <Card class="h-64 w-full" bg-color="#000">
+            <Card class="h-full w-full" bg-color="#000">
               <!-- <PixelatedCanvas
                 :height="200"
                 :width="150"
@@ -107,7 +109,7 @@
               /> -->
               <ParticleImage
                 :canvas-width="150"
-                :canvas-height="200"
+                :canvas-height="280"
                 :particle-size="1"
                 image-src="https://img2.baidu.com/it/u=119787490,3418968819&fm=253&app=138&f=JPEG?w=800&h=1584"
                 :responsive-width="true"
@@ -117,17 +119,18 @@
             </Card>
           </div>
           <div class="w-full">
-            <Card class="max-h-[256px] h-[256px]">
-              <AnimatedList>
+            <Card class="max-h-[320px] h-[320px]" title="最近发生的事">
+              <AnimatedList class="h-[260px]">
                 <template #default>
                   <Notification
                     v-for="(item, idx) in notifications"
                     :key="idx"
-                    :name="item.name"
+                    :title="item.title"
                     :description="item.description"
-                    :icon="item.icon"
-                    :color="item.color"
                     :time="item.time"
+                    :type="item.type"
+                    :userName="item.userName"
+                    :userHead="item.userHead"
                   />
                 </template>
               </AnimatedList>
@@ -136,12 +139,26 @@
         </div>
       </div>
     </div>
+    <div class="flex gap-4 my-4">
+      <div class="w-[30rem]">
+        <Card class="h-80 w-full" bg-color="#000" title="精彩留言">
+          <RollingMessage></RollingMessage>
+        </Card>
+      </div>
+      <div class="w-full">
+        <Card class="h-80" title="写点什么吧~">
+          <LeaveMessageForm></LeaveMessageForm>
+        </Card>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from "vue";
 import TimelineArticle from "./component/TimelineArticle.vue";
+import RollingMessage from "./component/RollingMessage.vue";
+import StayMessage from "./component/StayMessage.vue";
 
 const myPlans = [
   { id: 1, content: "写一篇技术文章", completed: true },
@@ -157,39 +174,88 @@ const myPlans = [
 
 const notifications = [
   {
-    name: "Payment received",
-    description: "Inspira UI",
+    description: "",
     time: "15m ago",
-    icon: "💸",
-    color: "#00C9A7",
+    type: 1,
+    title: "平淡和忙碌的交织",
+    userName: "",
+    userHead: "",
   },
   {
-    name: "User signed up",
-    description: "Inspira UI",
+    description: "忙碌但很充实，感觉很有意义",
     time: "10m ago",
-    icon: "👤",
-    color: "#FFB800",
+    type: 2,
+    title: "平淡和忙碌的交织",
+    userName: "Arthals",
+    userHead:
+      "https://q9.itc.cn/q_70/images03/20250116/a1e4c3e61644486a8204fd68216e5b56.jpeg",
   },
   {
-    name: "New message",
-    description: "Inspira UI",
+    description: "还不错的项目，很有个性",
+    time: "10m ago",
+    type: 3,
+    title: "",
+    userName: "XINYAO QI",
+    userHead:
+      "https://q3.itc.cn/q_70/images03/20240426/5ec053593225431c8c82415c237ce1a9.jpeg",
+  },
+  {
+    description: "",
+    time: "10m ago",
+    type: 4,
+    title: "人生何处不青山",
+    userName: "平安",
+    userHead:
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1760522936_bb6d63b9.jpg",
+  },
+  {
+    description: "",
     time: "5m ago",
-    icon: "💬",
-    color: "#FF3D71",
+    type: 1,
+    title: "收获满满的一天",
+    userName: "Li Hua",
+    userHead: "",
   },
   {
-    name: "New event",
-    description: "Inspira UI",
+    description: "尝试了新的方法，结果不错",
+    time: "4m ago",
+    type: 2,
+    title: "实验新方法",
+    userName: "Chen Wei",
+    userHead: "https://randomuser.me/api/portraits/women/44.jpg",
+  },
+  {
+    description:
+      "网站内容真是丰满，坚持带给人的震撼，无意间看到顶上头像旁边动起来了，还是相当有意思 😆",
+    time: "3m ago",
+    type: 3,
+    title: "",
+    userName: "Zhang San",
+    userHead: "https://randomuser.me/api/portraits/men/15.jpg",
+  },
+  {
+    description: "",
     time: "2m ago",
-    icon: "🗞️",
-    color: "#1E86FF",
+    type: 4,
+    title: "2025 中秋",
+    userName: "",
+    userHead: "",
   },
   {
-    name: "Task completed",
-    description: "Inspira UI",
+    description: "",
     time: "1m ago",
-    icon: "✅",
-    color: "#45B26B",
+    type: 1,
+    title: "小项目完成",
+    userName: "",
+    userHead: "",
+  },
+  {
+    description: "今晚的晚餐很美味",
+    time: "Just now",
+    type: 2,
+    title: "美味晚餐",
+    userName: "Sun Qian",
+    userHead: "https://randomuser.me/api/portraits/women/51.jpg",
   },
 ];
 

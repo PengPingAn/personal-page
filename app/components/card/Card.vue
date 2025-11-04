@@ -8,8 +8,8 @@
     <!-- 毛玻璃背景 -->
     <div class="card-blur"></div>
 
-    <!-- 卡片主体 -->
-    <div class="card-body">
+    <!-- 卡片主体（支持自定义类名） -->
+    <div class="card-body" :class="bodyClass">
       <h3 class="card-title">{{ title }}</h3>
       <p class="card-content">
         <slot>
@@ -44,6 +44,11 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  /** 👉 新增：自定义 card-body 的 class */
+  bodyClass: {
+    type: [String, Array, Object],
+    default: "",
+  },
 });
 
 const isHover = ref(false);
@@ -57,19 +62,17 @@ const isHover = ref(false);
   overflow: hidden;
   cursor: default;
   color: #fff;
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
+  backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: transform 0.3s, box-shadow 0.3s;
 }
-
 .card.hover {
   transform: translateY(-4px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 卡片内容层 */
 .card-body,
 .card-footer {
   position: relative;

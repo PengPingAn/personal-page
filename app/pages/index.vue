@@ -1,5 +1,6 @@
 <template>
   <div class="page-container">
+    <div class="firefly-container" ref="fireflyContainer" aria-hidden="true"></div>
     <!-- 左右两列容器 -->
     <div class="layout-container">
       <!-- 左侧 LeftPanel 容器，限制高度 -->
@@ -34,6 +35,55 @@
 <script setup lang="ts">
 import LeftPanel from "@/pages/home/LeftPanel.vue";
 import RightPanel from "@/pages/home/RightPanel.vue";
+import { onMounted } from "vue";
+
+const fireflyContainer = ref<HTMLDivElement | null>(null);
+const numFireflies = 20;
+
+function createFireflies() {
+  if (!fireflyContainer.value) return;
+  for (let i = 0; i < numFireflies; i++) {
+    const firefly = document.createElement("div");
+    firefly.classList.add("firefly");
+
+    const startX = Math.random() * window.innerWidth;
+    const startY = Math.random() * window.innerHeight;
+    firefly.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+
+    const delay = Math.random() * 3;
+    firefly.style.animationDelay = `${delay}s, ${delay}s`;
+
+    fireflyContainer.value.appendChild(firefly);
+    animateFly(firefly, startX, startY);
+  }
+}
+
+function clearFireflies() {
+  fireflyContainer.value?.replaceChildren(); // 更快清除所有 firefly
+}
+function animateFly(el: HTMLElement, startX: number, startY: number) {
+  const duration = 15000 + Math.random() * 25000;
+  const deltaX = (Math.random() - 0.5) * 1600;
+  const deltaY = (Math.random() - 0.5) * 1600;
+
+  el.animate(
+    [
+      { transform: `translate3d(${startX}px, ${startY}px, 0)` },
+      { transform: `translate3d(${startX + deltaX}px, ${startY + deltaY}px, 0)` },
+      { transform: `translate3d(${startX}px, ${startY}px, 0)` },
+    ],
+    {
+      duration,
+      iterations: Infinity,
+      direction: "alternate",
+      easing: "ease-in-out",
+    }
+  );
+}
+
+onMounted(() => {
+  createFireflies();
+});
 </script>
 
 <style scoped>

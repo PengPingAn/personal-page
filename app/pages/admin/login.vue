@@ -3,13 +3,10 @@
     <!-- 黑暗模式开关 -->
     <div class="dark-toggle">
       <label class="switch">
-        <input type="checkbox" v-model="darkMode" />
+        <input type="checkbox" v-model="darkMode" @click="toggleDarkMode" />
         <span class="slider"></span>
       </label>
     </div>
-
-    <!-- 萤火虫层 -->
-    <div class="firefly-layer"></div>
 
     <!-- 左侧文字 -->
     <div class="left">
@@ -19,21 +16,28 @@
 
     <!-- 右侧登录框 -->
     <div class="right">
+      <FlickeringGrid
+        class="absolute inset-0"
+        :quantity="100"
+        :ease="100"
+        :color="darkMode ? '#FFF' : '#000'"
+        :staticity="10"
+        refresh
+      />
       <div class="container">
         <div class="heading">登录你的账号</div>
         <form class="form" @submit.prevent="handleSubmit">
           <!-- 账号 -->
           <div class="input-field">
             <input
-              v-model="username"
+              v-model="account"
               required
               autocomplete="off"
               type="text"
-              id="username"
-              :class="{ error: errors.username }"
-              @blur="validateField('username')"
+              :class="{ error: errors.account }"
+              @blur="validateField('account')"
             />
-            <label v-if="!username" for="username">账号</label>
+            <label v-if="!account" for="account">账号</label>
           </div>
 
           <!-- 密码 -->
@@ -43,7 +47,6 @@
               required
               autocomplete="off"
               :type="showPassword ? 'text' : 'password'"
-              id="password"
               :class="{ error: errors.password }"
               @blur="validateField('password')"
             />
@@ -69,14 +72,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, nextTick } from "vue";
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "~/stores/pinia";
 
-const username = ref("");
-const password = ref("");
+const userStore = useUserStore();
+const { $toast } = useNuxtApp();
+
+const router = useRouter();
+const account = ref("admin");
+const password = ref("123456");
 const showPassword = ref(false);
 const darkMode = ref(false);
 const errors = reactive({
-  username: "",
+  account: "",
   password: "",
 });
 
@@ -84,13 +93,18 @@ function togglePassword() {
   showPassword.value = !showPassword.value;
 }
 
+function toggleDarkMode() {
+  darkMode.value = !darkMode.value;
+  localStorage.setItem("darkMode", darkMode.value ? "1" : "0");
+}
+
 // 简单校验逻辑
-function validateField(field: "username" | "password") {
-  if (field === "username") {
-    if (!username.value.trim()) {
-      errors.username = "请输入账号";
+function validateField(field: "account" | "password") {
+  if (field === "account") {
+    if (!account.value.trim()) {
+      errors.account = "请输入账号";
     } else {
-      errors.username = "";
+      errors.account = "";
     }
   }
 
@@ -103,44 +117,31 @@ function validateField(field: "username" | "password") {
   }
 }
 
-function handleSubmit() {
-  validateField("username");
+async function handleSubmit() {
+  validateField("account");
   validateField("password");
 
-  if (errors.username || errors.password) return;
+  if (errors.account || errors.password) return;
 
-  alert(`用户名: ${username.value}\n密码: ${password.value}`);
-}
-
-// 萤火虫生成
-function createFireflies() {
-  const fireflyLayer = document.querySelector(".firefly-layer");
-  if (!fireflyLayer) return;
-  fireflyLayer.innerHTML = "";
-
-  const count = 30;
-  for (let i = 0; i < count; i++) {
-    const f = document.createElement("div");
-    f.className = "firefly";
-    f.style.left = Math.random() * 100 + "%";
-    f.style.top = Math.random() * 100 + "%";
-    f.style.width = 2 + Math.random() * 3 + "px";
-    f.style.height = f.style.width;
-    f.style.animationDuration = 5 + Math.random() * 10 + "s";
-    f.style.animationDelay = Math.random() * 5 + "s";
-    f.style.opacity = 0.3 + Math.random() * 0.7 + "";
-    fireflyLayer.appendChild(f);
+  try {
+    let res = await $request.Post("/auth/login", {
+      account: account.value,
+      password: password.value,
+    });
+    if (res.code === 200) {
+      $toast?.success("登录成功，正在进入系统！");
+      userStore.setToken(res.data.token);
+      setTimeout(() => {
+        router.push("/admin/layout");
+      }, 500);
+    }
+  } catch (err: any) {
+    console.error("请求失败:", err.message);
   }
 }
 
-watch(darkMode, (val) => {
-  nextTick(() => {
-    if (val) createFireflies();
-    else {
-      const layer = document.querySelector(".firefly-layer");
-      if (layer) layer.innerHTML = "";
-    }
-  });
+onMounted(() => {
+  darkMode.value = localStorage.getItem("darkMode") === "1";
 });
 </script>
 
@@ -179,28 +180,34 @@ watch(darkMode, (val) => {
   filter: blur(70px);
 }
 
-.left,
-.right {
-  flex: 1 1 50%;
+.left {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 1rem;
   justify-content: center;
   align-items: center;
 }
-
 .left .text {
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
 }
 
-/* 保留你原来的登录框样式 */
-/* From Uiverse.io by Spacious74 */
+.right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .container {
-  border: solid 1px #8d8d8d;
-  padding: 20px;
   border-radius: 20px;
-  background-color: #fff;
-  width: auto;
+  padding: 30px;
+  width: 320px;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transition: background 0.5s, color 0.5s;
 }
 
 .container .heading {
@@ -221,45 +228,41 @@ watch(darkMode, (val) => {
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-direction: column;
 }
 
-/* From Uiverse.io by NorthFishHasNa */
 .login-button {
   display: inline-block;
-  border-radius: 4px;
+  border-radius: 5px;
   background-color: #3d405b;
   border: none;
-  color: #ffffff;
-  text-align: center;
-  font-size: 17px;
-  padding: 7px;
-  width: 130px;
-  transition: all 0.5s;
+  color: #fff;
+  font-size: 1rem;
+  padding: 10px 0;
+  width: 100%;
   cursor: pointer;
-  margin: 5px;
+  transition: 0.3s;
 }
 
-button span {
-  cursor: pointer;
-  display: inline-block;
+.login-button span {
   position: relative;
-  transition: 0.5s;
+  transition: 0.3s;
 }
 
-.login-button span:after {
+.login-button span::after {
   content: "»";
   position: absolute;
   opacity: 0;
   top: 0;
   right: -15px;
-  transition: 0.5s;
+  transition: 0.3s;
 }
 
 .login-button:hover span {
   padding-right: 15px;
 }
 
-.login-button:hover span:after {
+.login-button:hover span::after {
   opacity: 1;
   right: 0;
 }
@@ -288,7 +291,9 @@ button span {
   letter-spacing: 1px;
   width: 100%;
   transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
-  background-color: #f5f5f5; /* 可以加一个浅灰背景区分输入框 */
+  background: transparent;
+  border: 1px solid rgba(86, 255, 77, 0.5) !important;
+  box-shadow: 0 0 4px rgba(86, 255, 77, 0.5);
 }
 
 .input-field input:focus,
@@ -405,45 +410,6 @@ input:focus + .slider {
 
 input:checked + .slider:before {
   transform: translateX(1.3em);
-}
-
-/* 萤火虫 */
-.firefly-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
-.firefly {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffaa, transparent 70%);
-  animation-name: float;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-@keyframes float {
-  0% {
-    transform: translate(0, 0) scale(0.5);
-    opacity: 0.5;
-  }
-  25% {
-    transform: translate(calc(30px - 15px), calc(20px - 10px)) scale(0.7);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translate(calc(-30px + 15px), calc(25px - 12px)) scale(1);
-    opacity: 0.6;
-  }
-  75% {
-    transform: translate(calc(20px - 10px), calc(-20px + 10px)) scale(0.7);
-    opacity: 0.4;
-  }
-  100% {
-    transform: translate(0, 0) scale(0.5);
-    opacity: 0.5;
-  }
 }
 
 /* 响应式 */
