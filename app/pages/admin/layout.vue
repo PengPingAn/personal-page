@@ -18,12 +18,11 @@
 
     <div class="app-container">
       <!-- 左侧侧边栏 -->
-      <div class="sidebar" :class="{ collapsed: !sidebarOpen }">
+      <div
+        class="sidebar bg-gradient-to-b from-accent/10 via-accent/5 to-transparent transition-all duration-300 theme-aware"
+        :class="{ collapsed: !sidebarOpen }"
+      >
         <div class="sidebar-header">
-          <!-- <a href="#" class="logo">
-            <div class="logo-icon"></div>
-            <span class="logo-text" v-show="sidebarOpen">Acet Labs</span>
-          </a> -->
           <Text3d class="" shadow-color="red" :animate="false"> JSON文件列表 </Text3d>
         </div>
 
@@ -50,11 +49,8 @@
         </div>
 
         <div class="user-profile">
-          <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt="用户头像"
-            />
+          <div class="user-avatar" @click="showUserInfo">
+            <img v-if="userStore.head" :src="userStore.head" alt="用户头像" />
           </div>
           <span class="user-name nav-link" @click="handleLogout" v-show="sidebarOpen"
             >LOG OUT</span
@@ -91,10 +87,7 @@
 
         <div class="user-profile">
           <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt="用户头像"
-            />
+            <img :src="userStore.head" alt="用户头像" />
           </div>
           <span class="user-name">LOG OUT</span>
         </div>
@@ -102,65 +95,68 @@
 
       <!-- 主内容区域 -->
       <div class="dashboard">
-        <div class="content-head">
-          <p class="text-2xl" v-if="selectedFile">{{ selectedFile.name }} 内容</p>
-          <button v-if="selectedFile" @click="saveFile" class="save-btn">保存</button>
-        </div>
-
-        <vue-json-pretty
-          v-if="selectedFile"
-          :deep="3"
-          selectableType="single"
-          editableTrigger="dblclick"
-          :showSelectController="false"
-          :highlightMouseoverNode="true"
-          path="res"
-          v-model:data="selectedFile.content"
-          :showLength="true"
-          :showIcon="true"
-          :editable="true"
-          :showLineNumber="true"
-          :theme="isDarkMode ? 'dark' : 'light'"
-        >
-          <template #value="{ value, editing, updateValue }">
-            <textarea
-              v-if="editing"
-              :value="value"
-              @input="updateValue($event.target.value)"
-              style="
-                width: 100%;
-                min-height: 30px;
-                padding: 3px 8px;
-                box-sizing: border-box;
-              "
-            ></textarea>
-            <span v-else>{{ value }}</span>
-          </template>
-        </vue-json-pretty>
-
-        <JsonEditorVue
-          v-if="selectedFile"
-          v-model="selectedFile.content"
-          :mode="'tree'"
-          :search="true"
-          :indentation="2"
-          :history="true"
-          :theme="darkMode ? 'dark' : 'light'"
+        <component
+          :is="rightContent === 'userInfo' ? UserInfo : JsonContent"
+          v-bind="
+            rightContent === 'json'
+              ? { selectedFile, darkMode: isDarkMode, onSaveFile: saveFile }
+              : { darkMode: isDarkMode }
+          "
         />
-
-        <p v-else>请选择左侧的 JSON 文件</p>
       </div>
     </div>
+
+    <ModalDialog
+      :dark="isDarkMode"
+      v-model="show"
+      title="确认操作"
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    >
+      <div class="flex gap-4 items-center my-4">
+        <span class="flex-shrink-0 text-base">账号</span>
+        <input
+          id="query"
+          class="input"
+          type="search"
+          placeholder="账号*"
+          name="searchbar"
+          autocomplete="off"
+        />
+      </div>
+      <div class="flex gap-4 items-center my-4">
+        <span class="flex-shrink-0 text-base">账号</span>
+        <input
+          id="query"
+          class="input"
+          type="search"
+          placeholder="账号*"
+          name="searchbar"
+          autocomplete="off"
+        />
+      </div>
+      <div class="flex gap-4 items-center my-4">
+        <span class="flex-shrink-0 text-base">账号</span>
+        <input
+          id="query"
+          class="input"
+          type="search"
+          placeholder="账号*"
+          name="searchbar"
+          autocomplete="off"
+        />
+      </div>
+    </ModalDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import VueJsonPretty from "vue-json-pretty";
+import { ref, onMounted } from "vue";
 import "vue-json-pretty/lib/styles.css";
 import { useRouter } from "vue-router";
 import { useUserStore } from "~/stores/pinia";
-import JsonEditorVue from "json-editor-vue";
+import JsonContent from "./components/JsonContent.vue";
+import UserInfo from "./components/UserInfo.vue";
 
 const sidebarOpen = ref(true);
 const mobileSidebarOpen = ref(false);
@@ -170,15 +166,12 @@ const selectedFile = ref<{ name: string; content: any } | null>(null);
 const jsonFiles = ref<string[]>([]);
 const userStore = useUserStore();
 const router = useRouter();
+const rightContent = ref<"json" | "userInfo">("json");
 
 // 切换主题
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value;
   localStorage.setItem("darkMode", isDarkMode.value ? "1" : "0");
-};
-
-const jumpHome = () => {
-  router.push("/");
 };
 
 // 移动端侧边栏切换
@@ -190,7 +183,10 @@ const toggleMobileSidebar = () => {
 const selectFile = async (index: number) => {
   if (index < 0 || index >= jsonFiles.value.length) return;
   selectedFileIndex.value = index;
+  rightContent.value = "json";
+
   localStorage.setItem("selectedFileIndex", index.toString());
+  localStorage.setItem("rightContent", "json");
 
   const fileName = jsonFiles.value[index];
   try {
@@ -205,26 +201,40 @@ const selectFile = async (index: number) => {
   }
 };
 
+// 显示用户信息
+const showUserInfo = () => {
+  selectedFileIndex.value = null;
+  rightContent.value = "userInfo";
+  localStorage.setItem("rightContent", "userInfo");
+};
+
+// 登出
 const handleLogout = () => {
   userStore.logout();
-  // 还可以跳转到登录页
   router.push("/admin/login");
 };
 
+// 保存文件
+const getContentObject = () => {
+  if (!selectedFile.value) return {};
+  if (typeof selectedFile.value.content === "string") {
+    try {
+      return JSON.parse(selectedFile.value.content);
+    } catch {
+      return {};
+    }
+  }
+  return selectedFile.value.content;
+};
+
 const saveFile = async () => {
-  if (
-    selectedFileIndex.value &&
-    (selectedFileIndex.value < 0 || selectedFileIndex.value >= jsonFiles.value.length)
-  )
-    return;
+  if (selectedFileIndex.value === null || !selectedFile.value) return;
 
   const fileName = jsonFiles.value[selectedFileIndex.value];
-  console.log(fileName, selectedFile.value.content);
-
   try {
     const res = await $request.Post("/file/update", {
       file: fileName.split(".")[0],
-      data: selectedFile.value.content,
+      data: getContentObject(),
     });
     if (res.code === 200) {
       $toast?.success("修改成功");
@@ -232,7 +242,7 @@ const saveFile = async () => {
       $toast?.error("修改失败");
     }
   } catch (err) {
-    console.error("获取文件内容失败:", err);
+    console.error("保存文件失败:", err);
   }
 };
 
@@ -242,11 +252,18 @@ onMounted(async () => {
     const res = await $request.Get("/file/list");
     if (res.code === 200) jsonFiles.value = res.data;
 
-    const savedIndex = localStorage.getItem("selectedFileIndex");
-    if (savedIndex !== null) {
-      const idx = parseInt(savedIndex);
-      if (!isNaN(idx) && idx >= 0 && idx < jsonFiles.value.length) {
-        await selectFile(idx);
+    // 恢复右侧内容
+    const savedRightContent = localStorage.getItem("rightContent");
+    if (savedRightContent === "userInfo") {
+      rightContent.value = "userInfo";
+    } else {
+      // 如果是json，则读取选中文件
+      const savedIndex = localStorage.getItem("selectedFileIndex");
+      if (savedIndex !== null) {
+        const idx = parseInt(savedIndex);
+        if (!isNaN(idx) && idx >= 0 && idx < jsonFiles.value.length) {
+          await selectFile(idx);
+        }
       }
     }
 
@@ -266,7 +283,8 @@ onMounted(async () => {
 }
 
 :root {
-  --bg-primary: #ffffff;
+  --accent: 240 3.7% 15.9%;
+  --bg-primary: #f9fafb;
   --bg-secondary: #f5f5f5;
   --bg-sidebar: #f8f9fa;
   --text-primary: #000000;
@@ -276,9 +294,10 @@ onMounted(async () => {
 }
 
 .dark-mode {
+  --accent: 240 3.7% 15.9%;
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
-  --bg-sidebar: #262626;
+  --bg-sidebar: #665a5a;
   --text-primary: #ffffff;
   --text-secondary: #a3a3a3;
   --border-color: #404040;
@@ -329,8 +348,9 @@ onMounted(async () => {
 .sidebar {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-sidebar);
+  /* background-color: var(--bg-sidebar); */
   width: 250px;
+  min-width: 250px;
   padding: 1rem;
   transition: width var(--transition-speed);
   overflow: hidden;
@@ -419,6 +439,7 @@ onMounted(async () => {
   background-color: #e5e7eb;
   overflow: hidden;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .user-avatar img {
@@ -482,37 +503,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.content-head {
-  display: flex;
-  justify-content: space-between;
-}
-
-.stats-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.stat-card {
-  flex: 1;
-  height: 80px;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-  animation: pulse 2s infinite;
-}
-
-.content-row {
-  display: flex;
-  gap: 1rem;
-  flex-grow: 1;
-}
-
-.content-card {
-  flex: 1;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-  animation: pulse 2s infinite;
 }
 
 /* 动画 */

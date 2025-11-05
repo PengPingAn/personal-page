@@ -5,14 +5,14 @@ import { useCookie } from "#app";
 interface UserState {
   token: string;
   username: string;
-  personal: { name: string; bio: string; projects: any[] } | null;
+  head: string;
 }
 
 export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     token: useCookie("web-token").value || "",
     username: "",
-    personal: null,
+    head: "",
   }),
   actions: {
     setToken(token: string) {
@@ -23,14 +23,16 @@ export const useUserStore = defineStore("user", {
       this.username = username;
       useCookie("username").value = username;
     },
-    setPersonal(personal: UserState["personal"]) {
-      this.personal = personal;
+    setHead(head: string) {
+      this.head = head;
+      useCookie("head").value = head;
     },
     logout() {
       this.reset();
       // 清空 cookie
       useCookie("web-token").value = "";
       useCookie("username").value = "";
+      useCookie("head").value = "";
     },
     reset() {
       this.$reset(); // ✅ Pinia 自带的方法，重置 state 为初始值

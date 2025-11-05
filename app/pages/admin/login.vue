@@ -131,6 +131,7 @@ async function handleSubmit() {
     if (res.code === 200) {
       $toast?.success("登录成功，正在进入系统！");
       userStore.setToken(res.data.token);
+      userStore.setHead(res.data.head);
       setTimeout(() => {
         router.push("/admin/layout");
       }, 500);
