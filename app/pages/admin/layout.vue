@@ -113,8 +113,8 @@ import { ref, onMounted } from "vue";
 import "vue-json-pretty/lib/styles.css";
 import { useRouter } from "vue-router";
 import { useUserStore } from "~/stores/pinia";
-import JsonContent from "./components/JsonContent.vue";
-import UserInfo from "./components/UserInfo.vue";
+import JsonContent from "./components/jsonContent.vue";
+import UserInfo from "./components/userInfo.vue";
 
 const sidebarOpen = ref(true);
 const mobileSidebarOpen = ref(false);
