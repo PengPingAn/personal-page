@@ -5,7 +5,17 @@
       darkMode ? 'bg-[#1a1a1a] text-gray-100' : 'bg-gray-50 text-gray-800',
     ]"
   >
-    <p class="text-3xl font-semibold text-center mb-8">用户信息</p>
+    <p class="text-3xl font-semibold text-center mb-8">
+      用户信息
+      <span
+        :class="
+          darkMode ? 'fluent--edit-lock-24-regular-dark' : 'fluent--edit-lock-24-regular'
+        "
+        @click="showDialog = true"
+        class="cursor-pointer"
+        title="修改密码"
+      ></span>
+    </p>
 
     <div class="flex flex-wrap justify-center gap-8">
       <!-- 左侧：头像和登录信息 -->
@@ -59,12 +69,7 @@
               v-model="formValue.account"
               type="text"
               placeholder="账号"
-              :class="[
-                'px-3 py-2 rounded-sm border focus:outline-none focus:ring-2 transition',
-                darkMode
-                  ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-gray-100'
-                  : 'border-gray-300 focus:ring-blue-400 bg-gray-50 text-gray-800',
-              ]"
+              class="input"
             />
           </div>
 
@@ -74,12 +79,7 @@
               v-model="formValue.nickName"
               type="text"
               placeholder="昵称"
-              :class="[
-                'px-3 py-2 rounded-sm border focus:outline-none focus:ring-2 transition',
-                darkMode
-                  ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-gray-100'
-                  : 'border-gray-300 focus:ring-blue-400 bg-gray-50 text-gray-800',
-              ]"
+              class="input"
             />
           </div>
 
@@ -89,12 +89,7 @@
               v-model="formValue.email"
               type="email"
               placeholder="邮箱"
-              :class="[
-                'px-3 py-2 rounded-sm border focus:outline-none focus:ring-2 transition',
-                darkMode
-                  ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-gray-100'
-                  : 'border-gray-300 focus:ring-blue-400 bg-gray-50 text-gray-800',
-              ]"
+              class="input"
             />
           </div>
 
@@ -104,16 +99,57 @@
               v-model="formValue.headUrl"
               type="text"
               placeholder="头像地址"
-              :class="[
-                'px-3 py-2 rounded-sm border focus:outline-none focus:ring-2 transition',
-                darkMode
-                  ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-gray-100'
-                  : 'border-gray-300 focus:ring-blue-400 bg-gray-50 text-gray-800',
-              ]"
+              class="input"
             />
           </div>
         </form>
       </div>
+
+      <ModalDialog
+        :dark="darkMode"
+        v-model="showDialog"
+        title="修改密码"
+        @confirm="onConfirm"
+        @cancel="onCancel"
+      >
+        <div class="space-y-4">
+          <!-- 旧密码 -->
+          <div class="flex flex-col">
+            <label class="text-base mb-1">旧密码</label>
+            <input
+              class="input"
+              v-model="pwdValue.oldPwd"
+              type="password"
+              placeholder="请输入旧密码"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- 新密码 -->
+          <div class="flex flex-col">
+            <label class="text-base mb-1">新密码</label>
+            <input
+              class="input"
+              v-model="pwdValue.newPwd"
+              type="password"
+              placeholder="请输入新密码"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- 确认新密码 -->
+          <div class="flex flex-col">
+            <label class="text-base mb-1">确认新密码</label>
+            <input
+              class="input"
+              v-model="pwdValue.confirmPwd"
+              type="password"
+              placeholder="请再次输入新密码"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </ModalDialog>
     </div>
   </div>
 </template>
@@ -127,12 +163,18 @@ const props = defineProps({
 
 const userStore = useUserStore();
 const defaultAvatar = userStore.$state.head;
-
+const showDialog = ref(false);
+const router = useRouter();
 const formValue = reactive({
   account: "",
   nickName: "",
   email: "",
   headUrl: "",
+});
+const pwdValue = reactive({
+  oldPwd: "",
+  newPwd: "",
+  confirmPwd: "",
 });
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -231,6 +273,28 @@ const btnSubmit = async () => {
   }
 };
 
+const onConfirm = async () => {
+  if (pwdValue.newPwd !== pwdValue.confirmPwd) {
+    $toast.warning("两次密码不一致");
+    return false;
+  }
+  try {
+    const res = await $request.Post("/auth/update_password", {
+      oldPassword: pwdValue.oldPwd,
+      newPassword: pwdValue.newPwd,
+    });
+    if (res.code === 200) {
+      $toast.success("修改成功，即将退出登录");
+      userStore.logout();
+      router.push("/admin/login");
+    } else {
+      $toast.error(res.msg);
+    }
+  } catch (err) {
+    console.error("修改失败:", err);
+  }
+};
+
 onMounted(async () => {
   try {
     const res = await $request.Get("/auth/me");
@@ -278,5 +342,22 @@ onMounted(async () => {
 }
 .btn-confirm:hover {
   background-color: #6a9e61;
+}
+
+.fluent--edit-lock-24-regular-dark {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M15.891 3.048a3.578 3.578 0 1 1 5.061 5.06l-1.803 1.804a3.5 3.5 0 0 0-1.71-.411l.5-.5L15 6.06l-9.998 10c-.21.21-.358.474-.427.763l-.813 3.415l3.416-.813c.289-.069.553-.216.763-.426l4.143-4.143A2.5 2.5 0 0 0 12 15.5v1.562L9.002 20.06a3.1 3.1 0 0 1-1.477.826L2.924 21.98a.75.75 0 0 1-.904-.903l1.096-4.602c.133-.559.419-1.07.825-1.476zm4 1.06a2.08 2.08 0 0 0-2.94 0l-.89.892L19 7.94l.891-.892a2.08 2.08 0 0 0 0-2.94M15 14v-1a2.5 2.5 0 0 1 5 0v1h.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-5a1.5 1.5 0 0 1 1.5-1.5zm1.5-1v1h2v-1a1 1 0 1 0-2 0m2 5a1 1 0 1 0-2 0a1 1 0 0 0 2 0' stroke-width='0.5' stroke='%23fff'/%3E%3C/svg%3E");
+}
+.fluent--edit-lock-24-regular {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M15.891 3.048a3.578 3.578 0 1 1 5.061 5.06l-1.803 1.804a3.5 3.5 0 0 0-1.71-.411l.5-.5L15 6.06l-9.998 10c-.21.21-.358.474-.427.763l-.813 3.415l3.416-.813c.289-.069.553-.216.763-.426l4.143-4.143A2.5 2.5 0 0 0 12 15.5v1.562L9.002 20.06a3.1 3.1 0 0 1-1.477.826L2.924 21.98a.75.75 0 0 1-.904-.903l1.096-4.602c.133-.559.419-1.07.825-1.476zm4 1.06a2.08 2.08 0 0 0-2.94 0l-.89.892L19 7.94l.891-.892a2.08 2.08 0 0 0 0-2.94M15 14v-1a2.5 2.5 0 0 1 5 0v1h.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-5a1.5 1.5 0 0 1 1.5-1.5zm1.5-1v1h2v-1a1 1 0 1 0-2 0m2 5a1 1 0 1 0-2 0a1 1 0 0 0 2 0' stroke-width='0.5' stroke='%23000'/%3E%3C/svg%3E");
 }
 </style>

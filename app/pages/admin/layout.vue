@@ -105,48 +105,6 @@
         />
       </div>
     </div>
-
-    <ModalDialog
-      :dark="isDarkMode"
-      v-model="show"
-      title="确认操作"
-      @confirm="onConfirm"
-      @cancel="onCancel"
-    >
-      <div class="flex gap-4 items-center my-4">
-        <span class="flex-shrink-0 text-base">账号</span>
-        <input
-          id="query"
-          class="input"
-          type="search"
-          placeholder="账号*"
-          name="searchbar"
-          autocomplete="off"
-        />
-      </div>
-      <div class="flex gap-4 items-center my-4">
-        <span class="flex-shrink-0 text-base">账号</span>
-        <input
-          id="query"
-          class="input"
-          type="search"
-          placeholder="账号*"
-          name="searchbar"
-          autocomplete="off"
-        />
-      </div>
-      <div class="flex gap-4 items-center my-4">
-        <span class="flex-shrink-0 text-base">账号</span>
-        <input
-          id="query"
-          class="input"
-          type="search"
-          placeholder="账号*"
-          name="searchbar"
-          autocomplete="off"
-        />
-      </div>
-    </ModalDialog>
   </div>
 </template>
 
@@ -269,6 +227,7 @@ onMounted(async () => {
 
     const savedDark = localStorage.getItem("darkMode");
     isDarkMode.value = savedDark === "1";
+    console.log(userStore.$state);
   } catch (err) {
     console.error("初始化失败:", err);
   }

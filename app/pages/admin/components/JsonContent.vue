@@ -5,7 +5,7 @@
       <button v-if="selectedFile" @click="saveFile" class="save-btn">保存</button>
     </div>
 
-    <div>
+    <div v-if="selectedFile">
       <MySelect
         v-model="selected"
         :options="[

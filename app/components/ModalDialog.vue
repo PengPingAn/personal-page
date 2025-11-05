@@ -76,9 +76,25 @@ function cancel() {
   close();
 }
 
-function confirm() {
-  emit("confirm");
-  close();
+/**
+ * confirm 现在支持三种写法：
+ * - emit("confirm") => 如果返回 true，则关闭
+ * - emit("confirm", done) => 父组件手动调用 done() 关闭
+ * - emit("confirm") => 如果是 Promise，则等 Promise resolve(true) 才关闭
+ */
+async function confirm() {
+  const result = emit("confirm", close);
+
+  // 如果 emit 没返回值（常规事件），不自动关
+  if (!result || result.length === 0) return;
+
+  const maybePromise = result[0];
+  if (maybePromise instanceof Promise) {
+    const ok = await maybePromise;
+    if (ok) close();
+  } else if (maybePromise === true) {
+    close();
+  }
 }
 
 // macOS 弹窗缩放动画钩子

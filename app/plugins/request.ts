@@ -44,7 +44,7 @@ export default defineNuxtPlugin(() => {
             window.location.href = "/admin/login2";
           }, 500);
         } else {
-          window.$toast?.error(res.data.message || "请求错误");
+          window.$toast?.error(res.data.msg || "请求错误");
         }
         return Promise.reject(res.data);
       }
