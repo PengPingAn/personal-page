@@ -66,17 +66,13 @@ const userStore = useUserStore();
 const formValue = ref({
   nickName: "",
   email: "",
-  webSite: "",
   content: "",
-  address: "",
 });
 
 watch(
   () => userStore.$state,
   (state) => {
     formValue.value.nickName = state.name;
-    formValue.value.email = state.email;
-    formValue.value.webSite = state.webSite;
   },
   { immediate: true } // 页面加载时立即执行一次
 );
@@ -101,7 +97,6 @@ const btn_submit = () => {
     return;
   }
 
-  formValue.value.address = userStore.address;
   emit("submit", formValue.value);
 
   formValue.value.content = "";

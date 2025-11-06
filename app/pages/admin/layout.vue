@@ -24,6 +24,15 @@
       >
         <div class="sidebar-header">
           <Text3d class="" shadow-color="red" :animate="false"> JSON文件列表 </Text3d>
+          <span
+            :class="
+              isDarkMode
+                ? 'streamline-freehand--notes-add-dark'
+                : 'streamline-freehand--notes-add'
+            "
+            class="absolute top-0 right-0 cursor-pointer z-10"
+            @click="showCreateJson"
+          ></span>
         </div>
 
         <div class="nav-links">
@@ -35,16 +44,24 @@
             :class="{ selected: selectedFileIndex === index }"
             @click.prevent="selectFile(index)"
           >
-            <span
-              :class="
-                selectedFileIndex === index
-                  ? 'qlementine-icons--file-text-16-select'
-                  : 'qlementine-icons--file-text-16'
-              "
-            >
-            </span>
+            <div class="flex gap-2 items-center">
+              <span
+                :class="
+                  selectedFileIndex === index
+                    ? 'qlementine-icons--file-text-16-select'
+                    : 'qlementine-icons--file-text-16'
+                "
+              >
+              </span>
 
-            <span class="nav-link-text" v-show="sidebarOpen">{{ link }}</span>
+              <span class="nav-link-text" v-show="sidebarOpen">{{ link }}</span>
+            </div>
+
+            <span
+              class="mdi--delete-outline cursor-pointer"
+              v-if="selectedFileIndex === index"
+              @click="delFile(index)"
+            ></span>
           </a>
         </div>
 
@@ -96,15 +113,23 @@
       <!-- 主内容区域 -->
       <div class="dashboard">
         <component
-          :is="rightContent === 'userInfo' ? UserInfo : JsonContent"
-          v-bind="
-            rightContent === 'json'
-              ? { selectedFile, darkMode: isDarkMode, onSaveFile: saveFile }
-              : { darkMode: isDarkMode }
-          "
+          :is="componentsMap[rightContent]"
+          v-bind="getProps(rightContent)"
+          @getFileList="getFileList"
         />
       </div>
     </div>
+    <ModalDialog
+      :dark="isDarkMode"
+      v-model="showDialog"
+      title="删除文件"
+      cancelText="手滑了"
+      confirmText="嗯"
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    >
+      一旦删除无法恢复，是否继续？
+    </ModalDialog>
   </div>
 </template>
 
@@ -115,21 +140,50 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "~/stores/pinia";
 import JsonContent from "./components/jsonContent.vue";
 import UserInfo from "./components/userInfo.vue";
+import CreateJson from "./components/createJson.vue";
 
 const sidebarOpen = ref(true);
 const mobileSidebarOpen = ref(false);
 const isDarkMode = ref(false);
 const selectedFileIndex = ref<number | null>(null);
-const selectedFile = ref<{ name: string; content: any } | null>(null);
+const selectedFile = ref<{ name: any; content: any } | null>(null);
 const jsonFiles = ref<string[]>([]);
 const userStore = useUserStore();
 const router = useRouter();
-const rightContent = ref<"json" | "userInfo">("json");
+const rightContent = ref<"json" | "userInfo" | "createJson">("json");
+const showDialog = ref(false);
 
+const componentsMap: Record<string, any> = {
+  json: JsonContent,
+  userInfo: UserInfo,
+  createJson: CreateJson,
+};
+
+const getProps = (key: string) => {
+  switch (key) {
+    case "json":
+      return {
+        selectedFile: selectedFile.value,
+        darkMode: isDarkMode.value,
+        onSaveFile: saveFile,
+      };
+    case "userInfo":
+      return { darkMode: isDarkMode.value };
+    case "createJson":
+      return { darkMode: isDarkMode, onSaveFile: getFileList };
+    case "logs":
+      return { darkMode: isDarkMode };
+    default:
+      return {};
+  }
+};
 // 切换主题
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value;
   localStorage.setItem("darkMode", isDarkMode.value ? "1" : "0");
+};
+const jumpHome = () => {
+  router.push("/");
 };
 
 // 移动端侧边栏切换
@@ -166,6 +220,13 @@ const showUserInfo = () => {
   localStorage.setItem("rightContent", "userInfo");
 };
 
+// 显示新增json文件页面
+const showCreateJson = () => {
+  selectedFileIndex.value = null;
+  rightContent.value = "createJson";
+  localStorage.setItem("rightContent", "createJson");
+};
+
 // 登出
 const handleLogout = () => {
   userStore.logout();
@@ -188,7 +249,16 @@ const getContentObject = () => {
 const saveFile = async () => {
   if (selectedFileIndex.value === null || !selectedFile.value) return;
 
-  const fileName = jsonFiles.value[selectedFileIndex.value];
+  const rawFileName = jsonFiles.value[selectedFileIndex.value]?.split(".")[0] || "";
+
+  // ✅ 校验文件名合法性
+  if (!/^[a-zA-Z0-9_-]+$/.test(rawFileName)) {
+    console.error("文件名不合法");
+    return;
+  }
+
+  const fileName = rawFileName;
+
   try {
     const res = await $request.Post("/file/update", {
       file: fileName.split(".")[0],
@@ -204,8 +274,7 @@ const saveFile = async () => {
   }
 };
 
-// 初始化
-onMounted(async () => {
+const getFileList = async () => {
   try {
     const res = await $request.Get("/file/list");
     if (res.code === 200) jsonFiles.value = res.data;
@@ -214,6 +283,8 @@ onMounted(async () => {
     const savedRightContent = localStorage.getItem("rightContent");
     if (savedRightContent === "userInfo") {
       rightContent.value = "userInfo";
+    } else if (savedRightContent === "createJson") {
+      rightContent.value = "createJson";
     } else {
       // 如果是json，则读取选中文件
       const savedIndex = localStorage.getItem("selectedFileIndex");
@@ -231,6 +302,37 @@ onMounted(async () => {
   } catch (err) {
     console.error("初始化失败:", err);
   }
+};
+
+const delFile = async (index: number) => {
+  showDialog.value = true;
+  const rawFileName = jsonFiles.value[index]?.split(".")[0] || "";
+
+  // ✅ 校验文件名合法性
+  if (!/^[a-zA-Z0-9_-]+$/.test(rawFileName)) {
+    console.error("文件名不合法");
+    return;
+  }
+
+  const fileName = rawFileName;
+  // try {
+  //   const res = await $request.Post("/file/delete", {
+  //     file: fileName,
+  //   });
+  //   if (res.code === 200) {
+  //     $toast?.success("删除成功");
+  //     await getFileList();
+  //   } else {
+  //     $toast?.error("删除失败");
+  //   }
+  // } catch (err) {
+  //   console.error("操作:", err);
+  // }
+};
+
+// 初始化
+onMounted(async () => {
+  await getFileList();
 });
 </script>
 
@@ -323,6 +425,7 @@ onMounted(async () => {
 .sidebar-header {
   margin-bottom: 2rem;
   margin-top: 1rem;
+  position: relative;
 }
 
 .logo {
@@ -363,6 +466,7 @@ onMounted(async () => {
   text-decoration: none;
   color: var(--text-secondary);
   transition: all var(--transition-speed);
+  justify-content: space-between;
 }
 
 .nav-link:hover {

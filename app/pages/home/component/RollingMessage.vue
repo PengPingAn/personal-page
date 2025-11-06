@@ -1,8 +1,14 @@
 <template>
-  <div class="message-wrapper">
-    <div class="message-content">
+  <div class="message-wrapper" ref="wrapperRef">
+    <div
+      class="message-content"
+      :style="{ animationDuration: animationDuration + 's' }"
+      @mouseenter="pause = true"
+      @mouseleave="pause = false"
+      :class="{ paused: pause }"
+    >
       <div v-for="(item, index) in duplicatedMessages" :key="index" class="message-item">
-        <img :src="item.avatar" alt="avatar" class="avatar" />
+        <img :src="item.headUrl" alt="avatar" class="avatar" />
         <p class="text">{{ item.content }}</p>
       </div>
     </div>
@@ -10,39 +16,53 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from "vue";
+import { ref, computed, onMounted, defineProps } from "vue";
 
 interface Message {
-  avatar: string;
+  nickName: string;
+  email: string;
   content: string;
+  createTime: string;
+  ip: string;
+  headUrl: string;
 }
 
-// 组件 props，可传入留言数据和滚动速度
-const props = defineProps<{
-  messages: Message[];
-  speed?: number; // 秒
-}>();
+// props
+const props = defineProps<{ speed?: number }>();
 
-const defaultMessages: Message[] = [
-  { avatar: "https://i.pravatar.cc/40?img=1", content: "今天天气真不错！" },
-  { avatar: "https://i.pravatar.cc/40?img=2", content: "这个项目太棒了👏" },
-  { avatar: "https://i.pravatar.cc/40?img=3", content: "期待下个版本！" },
-  { avatar: "https://i.pravatar.cc/40?img=4", content: "谢谢作者的分享～" },
-  { avatar: "https://i.pravatar.cc/40?img=5", content: "已经收藏学习了！" },
-  { avatar: "https://i.pravatar.cc/40?img=6", content: "Vue3 真香啊哈哈哈" },
-  { avatar: "https://i.pravatar.cc/40?img=7", content: "前端越来越好玩了！" },
-  { avatar: "https://i.pravatar.cc/40?img=8", content: "我也来留个言😎" },
-  { avatar: "https://i.pravatar.cc/40?img=9", content: "无限滚动太丝滑了～" },
-  { avatar: "https://i.pravatar.cc/40?img=10", content: "测试最后一条消息！" },
-];
+const defaultMessages = ref<Message[]>([]);
+const pause = ref(false);
+const wrapperRef = ref<HTMLElement | null>(null);
 
-const msgs = props.messages?.length ? props.messages : defaultMessages;
+// 克隆消息实现无缝滚动
+const duplicatedMessages = computed(() => [
+  ...defaultMessages.value,
+  ...defaultMessages.value,
+]);
 
-// 克隆一份，实现无缝滚动
-const duplicatedMessages = computed(() => [...msgs, ...msgs]);
+// 动画时长
+const animationDuration = computed(() => props.speed ?? 20);
 
-// 滚动时间
-const duration = props.speed ?? 20; // 默认 20 秒
+const getMessage = async () => {
+  try {
+    const res = await $request.Get("/message/get_message_list");
+    if (res.code === 200) {
+      defaultMessages.value = res.data;
+    } else {
+      console.error("获取文件内容失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
+};
+
+onMounted(async () => {
+  await getMessage();
+});
+
+defineExpose({
+  getMessage,
+});
 </script>
 
 <style scoped>
@@ -53,23 +73,22 @@ const duration = props.speed ?? 20; // 默认 20 秒
   overflow: hidden;
   color: #fff;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-/* 滚动区域 */
 .message-content {
   display: flex;
   flex-direction: column;
-  animation: scroll-up linear infinite;
-  animation-duration: 20s; /* 可通过 props.speed 动态设置 */
+  animation-name: scroll-up;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
-/* 鼠标悬浮暂停滚动 */
-.message-wrapper:hover .message-content {
+.message-content.paused {
   animation-play-state: paused;
 }
 
-/* 单条消息 */
 .message-item {
   display: flex;
   align-items: center;
@@ -80,7 +99,7 @@ const duration = props.speed ?? 20; // 默认 20 秒
 .avatar {
   width: 2rem;
   height: 2rem;
-  border-radius: 9999px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
@@ -89,7 +108,6 @@ const duration = props.speed ?? 20; // 默认 20 秒
   opacity: 0.9;
 }
 
-/* 无限滚动动画 */
 @keyframes scroll-up {
   0% {
     transform: translateY(0);

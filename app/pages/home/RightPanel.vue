@@ -142,12 +142,12 @@
     <div class="flex gap-4 my-4">
       <div class="w-[30rem]">
         <Card class="h-80 w-full" bg-color="#000" title="精彩留言">
-          <RollingMessage></RollingMessage>
+          <RollingMessage ref="rollingMessageRef"></RollingMessage>
         </Card>
       </div>
       <div class="w-full">
         <Card class="h-80" title="写点什么吧~">
-          <LeaveMessageForm></LeaveMessageForm>
+          <LeaveMessageForm @submit="submit"></LeaveMessageForm>
         </Card>
       </div>
     </div>
@@ -158,8 +158,8 @@
 import { ref, onMounted, nextTick } from "vue";
 import TimelineArticle from "./component/TimelineArticle.vue";
 import RollingMessage from "./component/RollingMessage.vue";
-import StayMessage from "./component/StayMessage.vue";
 
+const rollingMessageRef = ref<any>(null);
 const myPlans = [
   { id: 1, content: "写一篇技术文章", completed: true },
   { id: 2, content: "整理笔记", completed: true },
@@ -474,6 +474,20 @@ const heatmapData = {
   "2025-10-14 00:00:00": 1,
   "2025-10-15 00:00:00": 11,
   "2025-10-16 00:00:00": 1,
+};
+
+const submit = async (val: any) => {
+  try {
+    const res = await $request.Post("/message/add_message", val);
+    if (res.code === 200) {
+      $toast?.success("留言成功");
+      await rollingMessageRef.value.getMessage();
+    } else {
+      $toast?.error("留言失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
 };
 </script>
 

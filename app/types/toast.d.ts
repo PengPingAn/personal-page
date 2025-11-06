@@ -1,4 +1,4 @@
-import { ToastType } from "~/composables/useToast"; // 可选，如果你有 ToastType
+import { ToastType } from "~/composables/useToast";
 
 interface ToastMethods {
   success(msg: string, duration?: number): void;

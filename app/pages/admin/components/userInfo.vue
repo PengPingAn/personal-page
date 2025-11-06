@@ -2,7 +2,7 @@
   <div
     :class="[
       'p-8 font-sans min-h-screen text-gray-800 transition-colors duration-300 animate-fadeIn',
-      darkMode ? 'bg-[#1a1a1a] text-gray-100' : 'bg-gray-50 text-gray-800',
+      darkMode ? 'bg-[#1a1a1a] text-white' : 'bg-gray-50 text-gray-800',
     ]"
   >
     <p class="text-3xl font-semibold text-center mb-8">

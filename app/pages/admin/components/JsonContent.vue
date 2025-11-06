@@ -1,5 +1,5 @@
 <template>
-  <div class="json-content max-h-[80vh] overflow-auto">
+  <div class="json-content max-h-[100vh]">
     <div class="content-head">
       <p class="text-2xl" v-if="selectedFile">{{ selectedFile.name }} 内容</p>
       <button v-if="selectedFile" @click="saveFile" class="save-btn">保存</button>
@@ -18,7 +18,7 @@
       />
     </div>
 
-    <div>
+    <div class="max-h-[80vh] overflow-auto">
       <vue-json-pretty
         v-if="selectedFile && selected === 1"
         :deep="3"
