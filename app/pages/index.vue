@@ -21,7 +21,7 @@
           ───我的作品───
         </Text3d>
       </div>
-      <ProjectTabs></ProjectTabs>
+      <ProjectTabs :projectsData="projectsData"></ProjectTabs>
     </div>
     <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
       <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
@@ -39,6 +39,7 @@ import { onMounted } from "vue";
 
 const fireflyContainer = ref<HTMLDivElement | null>(null);
 const numFireflies = 20;
+const projectsData = ref<any>(null);
 
 function createFireflies() {
   if (!fireflyContainer.value) return;
@@ -81,8 +82,19 @@ function animateFly(el: HTMLElement, startX: number, startY: number) {
   );
 }
 
-onMounted(() => {
+onMounted(async () => {
   createFireflies();
+
+  try {
+    const res = await $request.Get("/home/get_projects");
+    if (res.code === 200) {
+      projectsData.value = res.data;
+    } else {
+      $toast?.error("获取失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
 });
 </script>
 

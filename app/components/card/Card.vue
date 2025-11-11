@@ -80,20 +80,26 @@ const isHover = ref(false);
 }
 
 .card-body {
+  display: flex;
+  flex-direction: column;
   padding: 16px;
   height: 100%;
+  overflow: hidden; /* 防止整体溢出 */
 }
 
 .card-title {
   margin: 0 0 8px 0;
   font-size: 18px;
   font-weight: 600;
+  flex-shrink: 0; /* 保证标题高度固定 */
 }
 
 .card-content {
   margin: 0;
   font-size: 14px;
   color: #fff;
+  flex: 1; /* 自动占用剩余高度 */
+  height: 100%;
 }
 
 .card-footer {

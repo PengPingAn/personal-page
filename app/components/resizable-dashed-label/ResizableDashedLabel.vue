@@ -56,7 +56,7 @@ const textSize = reactive({ width: 0, height: 0 });
 const padding = props.padding;
 const corners = [{ name: "tl" }, { name: "tr" }, { name: "bl" }, { name: "br" }];
 
-let dragging = null;
+let dragging: any = null;
 
 function updateTextSize() {
   nextTick(() => {

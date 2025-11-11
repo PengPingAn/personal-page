@@ -1,20 +1,28 @@
 <template>
   <div class="right-panel">
     <GitHubHeatmap :data="heatmapData"> </GitHubHeatmap>
-    <MBTICharacterCard
-      mbti="INFJ"
-      name="提倡者"
-      description="内向、理想主义，善于理解他人，追求精神世界。"
-      :traits="[
-        { label: 'I/E', value: 90, tooltip: '倾向内向 (I) 与外向 (E) 的差异' },
-        { label: 'N/S', value: 80, tooltip: '直觉 (N) 与感官 (S) 的差异' },
-        { label: 'F/T', value: 70, tooltip: '情感 (F) 与思考 (T) 的差异' },
-        { label: 'J/P', value: 60, tooltip: '判断 (J) 与知觉 (P) 的差异' },
-      ]"
-    />
-    <div class="flex flex-col xl:flex-row gap-4">
-      <PlanGoalList :data="myPlans" />
-      <TechScroll />
+    <Card class="my-4">
+      <MBTICharacterCard
+        mbti="INFJ"
+        name="提倡者"
+        description="内向、理想主义，善于理解他人，追求精神世界。"
+        :traits="[
+          { label: 'I/E', value: 90, tooltip: '倾向内向 (I) 与外向 (E) 的差异' },
+          { label: 'N/S', value: 80, tooltip: '直觉 (N) 与感官 (S) 的差异' },
+          { label: 'F/T', value: 70, tooltip: '情感 (F) 与思考 (T) 的差异' },
+          { label: 'J/P', value: 60, tooltip: '判断 (J) 与知觉 (P) 的差异' },
+        ]"
+      />
+    </Card>
+
+    <div class="flex flex-col xl:flex-row gap-4 min-h-[300px]">
+      <Card class="h-[300px]">
+        <PlanGoalList :data="myPlans" />
+      </Card>
+
+      <Card title="我的技能" class="h-[300px]">
+        <TagsGravity />
+      </Card>
     </div>
 
     <Card class="my-4">
@@ -160,17 +168,7 @@ import TimelineArticle from "./component/TimelineArticle.vue";
 import RollingMessage from "./component/RollingMessage.vue";
 
 const rollingMessageRef = ref<any>(null);
-const myPlans = [
-  { id: 1, content: "写一篇技术文章", completed: true },
-  { id: 2, content: "整理笔记", completed: true },
-  { id: 3, content: "复习 Vue 3", completed: false },
-  { id: 4, content: "完成一个个人主页", completed: false },
-  {
-    id: 5,
-    content: "提高后端技术栈深度与广度",
-    completed: false,
-  },
-];
+const myPlans = ref([]);
 
 const notifications = [
   {
@@ -478,7 +476,7 @@ const heatmapData = {
 
 const submit = async (val: any) => {
   try {
-    const res = await $request.Post("/message/add_message", val);
+    const res = await $request.Post("/home/add_message", val);
     if (res.code === 200) {
       $toast?.success("留言成功");
       await rollingMessageRef.value.getMessage();
@@ -489,6 +487,19 @@ const submit = async (val: any) => {
     console.error("获取文件内容失败:", err);
   }
 };
+
+onMounted(async () => {
+  try {
+    const res = await $request.Get("/home/get_matter_list");
+    if (res.code === 200) {
+      myPlans.value = res.data;
+    } else {
+      $toast?.error("获取数据失败");
+    }
+  } catch (err) {
+    console.error("获取内容失败:", err);
+  }
+});
 </script>
 
 <style scoped>

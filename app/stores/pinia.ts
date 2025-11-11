@@ -7,6 +7,10 @@ interface UserState {
   username: string;
   head: string;
 }
+interface MessageInfo {
+  name: string;
+  email: string;
+}
 
 export const useUserStore = defineStore("user", {
   state: (): UserState => ({
@@ -39,4 +43,20 @@ export const useUserStore = defineStore("user", {
     },
   },
   persist: true, // ✅ 现在可以用了
+});
+
+export const useMessageStore = defineStore("message-info", {
+  state: (): MessageInfo => ({
+    name: "",
+    email: "",
+  }),
+  actions: {
+    setMessageInfo(name: string, email: string) {
+      this.name = name;
+      this.email = email;
+      useCookie("message-info-name").value = name;
+      useCookie("message-info-email").value = email;
+    },
+  },
+  persist: true, // 开启持久化
 });

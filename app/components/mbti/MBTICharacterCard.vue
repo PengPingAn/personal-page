@@ -127,10 +127,10 @@ onMounted(async () => {
   width: 100%;
   color: #fff;
   /* background: #2c3e50; */
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
+  /* backdrop-filter: blur(15px);  */
   -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* background-color: rgba(255, 255, 255, 0.1); */
+  /* border: 1px solid rgba(255, 255, 255, 0.2); */
 }
 
 /* 人物部分 */

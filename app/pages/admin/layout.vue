@@ -128,7 +128,7 @@
       @confirm="onConfirm"
       @cancel="onCancel"
     >
-      一旦删除无法恢复，是否继续？
+      <div :class="isDarkMode ? 'text-white' : ''">一旦删除无法恢复，是否继续？</div>
     </ModalDialog>
   </div>
 </template>
@@ -266,6 +266,7 @@ const saveFile = async () => {
     });
     if (res.code === 200) {
       $toast?.success("修改成功");
+      await selectFile(selectedFileIndex.value);
     } else {
       $toast?.error("修改失败");
     }

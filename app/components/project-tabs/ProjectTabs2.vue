@@ -32,33 +32,38 @@
                 <span
                   class="text-lg font-bold text-white whitespace-pre-wrap break-words"
                 >
+                  {{ item.text }}
                   <template
-                    v-for="part in splitText(item)"
-                    :key="activeIndex + '-' + idx + '-' + part.text"
+                    v-if="
+                      tab.content[idx + 1]?.type === 'inline' ||
+                      tab.content[idx + 1]?.type === 'link' ||
+                      tab.content[idx + 1]?.type === 'highlight'
+                    "
                   >
+                    <span
+                      class="inline ml-1"
+                      v-if="tab.content[idx + 1].type === 'inline'"
+                    >
+                      {{ tab.content[idx + 1].text }}
+                    </span>
+                    <HoverLink
+                      v-else-if="tab.content[idx + 1].type === 'link'"
+                      :href="tab.content[idx + 1].text"
+                      :text="tab.content[idx + 1].text"
+                      color="#74fa85"
+                      class="inline ml-1"
+                    />
                     <PointerHighlight
-                      v-if="part.isHighlight"
+                      v-else-if="tab.content[idx + 1].type === 'highlight'"
+                      :key="activeIndex + '-' + idx"
                       :containerClassName="'my-pointer'"
                     >
                       <span
-                        class="text-lg font-bold inline whitespace-pre-wrap break-words"
+                        class="text-lg font-bold block whitespace-pre-wrap break-words"
                       >
-                        {{ part.text }}
+                        {{ tab.content[idx + 1].text }}
                       </span>
                     </PointerHighlight>
-                    <HoverLink
-                      v-else-if="part.isLink"
-                      :href="part.text"
-                      :text="part.text"
-                      color="#74fa85"
-                      class="inline"
-                    />
-                    <span
-                      v-else
-                      class="text-lg font-bold inline whitespace-pre-wrap break-words"
-                    >
-                      {{ part.text }}
-                    </span>
                   </template>
                 </span>
               </template>
@@ -72,14 +77,15 @@
             </template>
           </div>
 
-          <!-- 右侧轮播区域保持不变 -->
+          <!-- 右侧轮播 -->
           <div
             class="w-[55%] h-full relative flex flex-col items-center justify-start justify-center"
+            @mouseenter="hovering = true"
+            @mouseleave="hovering = false"
           >
+            <!-- 轮播图片区域 -->
             <div
               class="relative w-full h-[70%] overflow-hidden flex items-center justify-center"
-              @mouseenter="hovering = true"
-              @mouseleave="hovering = false"
             >
               <div
                 v-for="(img, imgIndex) in tab.images"
@@ -102,6 +108,7 @@
               </div>
             </div>
 
+            <!-- 小圆点 + 按钮容器 -->
             <div class="mt-4 w-full flex justify-between items-center px-4">
               <div class="flex gap-2 justify-center flex-1">
                 <span
@@ -135,19 +142,19 @@
       </div>
     </div>
 
+    <!-- 全局 ImageZoom 组件 -->
     <ImageZoom :showThumb="false" ref="imageZoomRef" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { Motion } from "motion-v";
 import ImageZoom from "@/components/ImageZoom.vue";
 
 type ContentItem = {
   type: "text" | "inline" | "highlight" | "h3" | "link";
   text: string;
-  highlight?: string[];
-  link?: string[];
 };
 
 type Tab = {
@@ -157,116 +164,111 @@ type Tab = {
   images: string[];
 };
 
-const props = defineProps<{ projectsData?: Tab[] }>();
-const tabs = ref<Tab[]>(props.projectsData ?? []);
+const tabs: Tab[] = [
+  {
+    title: "爱语",
+    value: "爱语",
+    content: [
+      { type: "h3", text: "爱语情侣日记" },
+      { type: "h3", text: "作品介绍" },
+      {
+        type: "text",
+        text: `这是一个专为情侣打造的私密空间网站，承载了技术与情感的融合，记录彼此的回忆，`,
+      },
+      { type: "highlight", text: "分享专属的浪漫时刻。" },
+      { type: "h3", text: "技术栈" },
+      {
+        type: "text",
+        text: `前端：vue3、Pinia、Tailwind CSS、Axios、Naive UI、Markdown\n后端：.NET 8 Web API、SqlSugar、SQLite、Redis、WebSocket、Swagger`,
+      },
+      { type: "h3", text: "链接" },
+      { type: "text", text: "Gitee：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+      { type: "text", text: "Demo：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+      { type: "text", text: "GitHub：" },
+      { type: "link", text: "https://gitee.com/leefugui/love-word" },
+    ],
+    images: [
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637973_02b813c6.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637978_445146f6.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637930_10d5d698.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637977_21d3d117.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637934_9f73266f.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637975_425afe68.png",
+      "https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761637935_71f6ff4c.png",
+    ],
+  },
+  {
+    title: "Services",
+    value: "services",
+    content: [
+      { type: "h3", text: "Services Tab" },
+      { type: "text", text: "Check out our " },
+      { type: "highlight", text: "awesome services" },
+    ],
+    images: [
+      "https://picsum.photos/id/1021/1200/700",
+      "https://picsum.photos/id/1024/1200/700",
+      "https://picsum.photos/id/1025/1200/700",
+    ],
+  },
+];
 
 const activeIndex = ref(0);
 const hovering = ref(false);
-const slideIndexes = ref<number[]>(tabs.value.length ? tabs.value.map(() => 0) : []);
+const slideIndexes = ref<number[]>(tabs.map(() => 0));
 
-// ----------- 核心：拆分 text => 高亮 + 链接 -----------
-const splitText = (item: ContentItem) => {
-  const result: { text: string; isHighlight?: boolean; isLink?: boolean }[] = [];
-  const highlights = item.highlight ?? [];
-  const links = item.link ?? [];
-  if (!highlights.length && !links.length) return [{ text: item.text }];
-
-  let str = item.text;
-  const parts: { text: string; type: "highlight" | "link" | "text" }[] = [];
-
-  // 合并匹配索引
-  const matches: { index: number; length: number; type: "highlight" | "link" }[] = [];
-  highlights.forEach((h) => {
-    let start = 0;
-    while ((start = str.indexOf(h, start)) !== -1) {
-      matches.push({ index: start, length: h.length, type: "highlight" });
-      start += h.length;
-    }
-  });
-  links.forEach((l) => {
-    let start = 0;
-    while ((start = str.indexOf(l, start)) !== -1) {
-      matches.push({ index: start, length: l.length, type: "link" });
-      start += l.length;
-    }
-  });
-
-  matches.sort((a, b) => a.index - b.index);
-
-  let lastIndex = 0;
-  matches.forEach((m) => {
-    if (m.index > lastIndex) {
-      result.push({ text: str.slice(lastIndex, m.index) });
-    }
-    result.push({
-      text: str.slice(m.index, m.index + m.length),
-      isHighlight: m.type === "highlight",
-      isLink: m.type === "link",
-    });
-    lastIndex = m.index + m.length;
-  });
-  if (lastIndex < str.length) result.push({ text: str.slice(lastIndex) });
-
-  return result;
-};
-
-// ---------- 其他逻辑保持不变 ----------
 const setActive = async (index: number) => {
   if (index === activeIndex.value) return;
   const prevIndex = activeIndex.value;
-  const prevSlideIndex = slideIndexes.value[prevIndex] ?? 0;
+  const prevSlideIndex = slideIndexes.value[prevIndex];
   slideIndexes.value[index] = prevSlideIndex;
   activeIndex.value = index;
   await nextTick();
   slideIndexes.value[index] = 0;
 };
-const getTabTotal = (tabIndex: number) => tabs.value[tabIndex]?.images?.length ?? 0;
+
 const nextSlide = (tabIndex: number) => {
-  const total = getTabTotal(tabIndex);
-  if (total === 0) return;
+  const total = tabs[tabIndex].images.length;
   slideIndexes.value[tabIndex] =
-    (slideIndexes.value[tabIndex] ?? 0) < total - 1
-      ? (slideIndexes.value[tabIndex] ?? 0) + 1
-      : 0;
+    slideIndexes.value[tabIndex] < total - 1 ? slideIndexes.value[tabIndex] + 1 : 0;
 };
 const prevSlide = (tabIndex: number) => {
-  const total = getTabTotal(tabIndex);
-  if (total === 0) return;
+  const total = tabs[tabIndex].images.length;
   slideIndexes.value[tabIndex] =
-    (slideIndexes.value[tabIndex] ?? 0) > 0
-      ? (slideIndexes.value[tabIndex] ?? 0) - 1
-      : total - 1;
+    slideIndexes.value[tabIndex] > 0 ? slideIndexes.value[tabIndex] - 1 : total - 1;
 };
 
+// 自动轮播
 let timer: any;
 const startAuto = () => {
   stopAuto();
   timer = setInterval(() => {
-    if (!hovering.value && tabs.value.length) nextSlide(activeIndex.value);
+    if (!hovering.value) nextSlide(activeIndex.value);
   }, 4000);
 };
 const stopAuto = () => clearInterval(timer);
+
 onMounted(startAuto);
 onUnmounted(stopAuto);
-watch(hovering, (val) => (val ? stopAuto() : startAuto()));
-watch(
-  () => props.projectsData,
-  (newVal) => {
-    tabs.value = newVal ?? [];
-    slideIndexes.value = tabs.value.map(() => 0);
-  },
-  { immediate: true }
-);
+watch(hovering, (val) => {
+  if (val) stopAuto();
+  else startAuto();
+});
 
+// tab 样式
 const tabClasses = (index: number) =>
   [
     "relative px-6 py-2 rounded-full cursor-pointer select-none transition-all",
     index === activeIndex.value ? "bg-gray-200 text-black" : "bg-gray-800 text-white",
   ].join(" ");
+
+// Content 样式
 const contentStyle = (index: number) => {
   const offset = index - activeIndex.value;
   return {
-    zIndex: tabs.value.length - Math.abs(offset),
+    zIndex: tabs.length - Math.abs(offset),
     opacity: offset > 2 || offset < -2 ? 0 : 1 - Math.abs(offset) * 0.1,
     transform: `translateY(${offset * -50}px) scale(${1 - Math.abs(offset) * 0.1})`,
     transition: "all 0.5s",
@@ -283,10 +285,10 @@ const contentStyle = (index: number) => {
   };
 };
 
+// 轮播 transform
 const getTransform = (tabIndex: number, imgIndex: number) => {
-  const current = slideIndexes.value[tabIndex] ?? 0;
-  const total = getTabTotal(tabIndex);
-  if (total === 0) return "";
+  const current = slideIndexes.value[tabIndex];
+  const total = tabs[tabIndex].images.length;
   if (imgIndex === current) return "translateX(0%) scale(1)";
   if (imgIndex === current + 1 && current < total - 1)
     return "translateX(90%) scale(0.9)";
@@ -295,35 +297,35 @@ const getTransform = (tabIndex: number, imgIndex: number) => {
   return "translateX(200%) scale(0.8)";
 };
 const getZIndex = (tabIndex: number, imgIndex: number) => {
-  const current = slideIndexes.value[tabIndex] ?? 0;
-  const total = getTabTotal(tabIndex);
-  if (total === 0) return 0;
+  const current = slideIndexes.value[tabIndex];
   if (imgIndex === current) return 30;
   if (
-    (imgIndex === current + 1 && current < total - 1) ||
-    (current === total - 1 && imgIndex === current - 1)
+    (imgIndex === current + 1 && current < tabs[tabIndex].images.length - 1) ||
+    (current === tabs[tabIndex].images.length - 1 && imgIndex === current - 1)
   )
     return 20;
   return 0;
 };
 const getOpacity = (tabIndex: number, imgIndex: number) => {
-  const current = slideIndexes.value[tabIndex] ?? 0;
-  const total = getTabTotal(tabIndex);
-  if (total === 0) return 0;
+  const current = slideIndexes.value[tabIndex];
   if (imgIndex === current) return 1;
   if (
-    (imgIndex === current + 1 && current < total - 1) ||
-    (current === total - 1 && imgIndex === current - 1)
+    (imgIndex === current + 1 && current < tabs[tabIndex].images.length - 1) ||
+    (current === tabs[tabIndex].images.length - 1 && imgIndex === current - 1)
   )
     return 1;
   return 0;
 };
 
+// ---------------------- ImageZoom 调用 ----------------------
 const imageZoomRef = ref<InstanceType<typeof ImageZoom> | null>(null);
+
+// 点击轮播图某张图片，打开 ImageZoom
 const openImageZoom = (images: string[], index: number) => {
-  if (!images || images.length === 0) return;
-  imageZoomRef.value?.setImages(images);
-  imageZoomRef.value?.openZoomAt(index);
+  if (imageZoomRef.value) {
+    imageZoomRef.value.setImages(images);
+    imageZoomRef.value.openZoomAt(index);
+  }
 };
 </script>
 
@@ -350,12 +352,41 @@ button {
   scrollbar-width: none;
 }
 
+/* From Uiverse.io by adamgiebl */
 .container {
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(15px);
+  --color: rgba(114, 114, 114, 0.3);
+  /* background-color: #191a1a;
+  background-image: linear-gradient(
+      0deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      var(--color) 25%,
+      var(--color) 26%,
+      transparent 27%,
+      transparent 74%,
+      var(--color) 75%,
+      var(--color) 76%,
+      transparent 77%,
+      transparent
+    );
+  background-size: 55px 55px; */
+
+  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
   -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>

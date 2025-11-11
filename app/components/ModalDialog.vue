@@ -202,16 +202,9 @@ function leave(el, done) {
 }
 .btn-cancel.dark-btn {
   border-color: #444;
-  color: #f0f0f0;
+  color: #ffffff;
 }
 .btn-cancel.dark-btn:hover {
   background-color: #333;
-}
-.btn-confirm.dark-btn {
-  background-color: #409eff;
-  color: #fff;
-}
-.btn-confirm.dark-btn:hover {
-  background-color: #66b1ff;
 }
 </style>

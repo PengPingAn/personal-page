@@ -45,7 +45,7 @@ const animationDuration = computed(() => props.speed ?? 20);
 
 const getMessage = async () => {
   try {
-    const res = await $request.Get("/message/get_message_list");
+    const res = await $request.Get("/home/get_message_list");
     if (res.code === 200) {
       defaultMessages.value = res.data;
     } else {

@@ -1,5 +1,5 @@
 <template>
-  <div class="json-content max-h-[80vh] overflow-auto">
+  <div class="json-content max-h-[100vh]">
     <div class="content-head mb-8">
       <p class="text-3xl font-semibold text-center">创建json文件</p>
       <button @click="createFile" class="save-btn">新增</button>
@@ -14,7 +14,7 @@
         class="input"
       />
     </div>
-    <div>
+    <div class="max-h-[75vh] overflow-auto">
       <JsonEditorVue
         v-model="formValue.data"
         :mode="'text'"

@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { useUserStore } from "@/stores/pinia";
+import { useMessageStore } from "@/stores/pinia";
 
 const { $toast } = useNuxtApp();
 const props = withDefaults(
@@ -61,7 +61,7 @@ const props = withDefaults(
   }
 );
 
-const userStore = useUserStore();
+const messageStore = useMessageStore();
 
 const formValue = ref({
   nickName: "",
@@ -70,9 +70,10 @@ const formValue = ref({
 });
 
 watch(
-  () => userStore.$state,
+  () => messageStore.$state,
   (state) => {
     formValue.value.nickName = state.name;
+    formValue.value.email = state.email;
   },
   { immediate: true } // 页面加载时立即执行一次
 );
@@ -100,6 +101,8 @@ const btn_submit = () => {
   emit("submit", formValue.value);
 
   formValue.value.content = "";
+
+  messageStore.setMessageInfo(formValue.value.nickName, formValue.value.email);
 };
 </script>
 

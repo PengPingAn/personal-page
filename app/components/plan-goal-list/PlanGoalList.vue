@@ -1,13 +1,48 @@
 <template>
-  <div class="container">
-    <div class="text-title">
-      <span>2025年目标</span>
+  <div class="container" ref="containerRef">
+    <!-- 标题 + 年份选择 -->
+    <div
+      class="text-title"
+      style="position: relative; display: inline-block; width: 100%"
+    >
+      <!-- 骨架屏 -->
+      <span v-if="!loaded" class="skeleton-inline"></span>
+
+      <!-- 文本 + 点击显示下拉 -->
+      <span v-else @click.stop="toggleSelect" class="year-text">
+        {{ visibleItems[selectIndex]?.year }}年目标
+        <svg
+          class="arrow"
+          viewBox="0 0 24 24"
+          :class="{ open: showSelect }"
+          width="16"
+          height="16"
+        >
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+        </svg>
+      </span>
+
+      <!-- 下拉框动画容器 -->
+      <transition name="dropdown-fade">
+        <div v-if="showSelect" class="dropdown-inner" @click.stop>
+          <ul class="naive-dropdown">
+            <li
+              v-for="(item, idx) in visibleItems"
+              :key="idx"
+              @click="selectYear(idx)"
+              class="dropdown-item"
+            >
+              {{ item.year }}年目标
+            </li>
+          </ul>
+        </div>
+      </transition>
     </div>
 
-    <!-- 骨架层 -->
+    <!-- 任务骨架列表 -->
     <div
       class="skeleton-list"
-      v-if="visibleItems == null || visibleItems.length == 0"
+      v-if="visibleItems.length === 0 || !loaded"
       :style="{ opacity: loaded ? 0 : 1, pointerEvents: loaded ? 'none' : 'auto' }"
     >
       <div v-for="i in 6" :key="i" class="skeleton-item"></div>
@@ -16,19 +51,19 @@
     <!-- 任务列表 -->
     <transition-group name="scale-in" tag="div" class="task-list" v-show="loaded">
       <div
-        v-for="(item, index) in visibleItems"
-        :key="item.id"
+        v-for="(item, index) in visibleItems[selectIndex]?.data || []"
+        :key="index"
         class="checkbox-container"
         :style="{ transitionDelay: index * 0.1 + 's', willChange: 'opacity, transform' }"
       >
         <input
           type="checkbox"
-          :id="'task-check-' + item.id"
+          :id="'task-check-' + index"
           class="task-checkbox"
-          :checked="item.completed"
+          :checked="item.status"
           disabled
         />
-        <label :for="'task-check-' + item.id" class="checkbox-label">
+        <label :for="'task-check-' + index" class="checkbox-label">
           <div class="checkbox-box">
             <div class="checkbox-fill"></div>
             <div class="checkmark">
@@ -40,8 +75,8 @@
             </div>
             <div class="success-ripple"></div>
           </div>
-          <span class="checkbox-text" :class="{ 'text-completed': item.completed }">
-            {{ index + 1 }}、{{ item.content }}
+          <span class="checkbox-text" :class="{ 'text-completed': item.status }">
+            {{ index + 1 }}、{{ item.label }}
           </span>
         </label>
       </div>
@@ -50,40 +85,95 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
+
+interface GoalItem {
+  label: string;
+  status: boolean;
+  completionTime: string;
+  showAnimation: boolean;
+}
 
 interface PlanItem {
-  id: number;
-  content: string;
-  completed: boolean;
+  year: string;
+  data: GoalItem[];
 }
 
 const props = defineProps<{ data: PlanItem[] }>();
 
 const visibleItems = ref<PlanItem[]>([]);
+const selectIndex = ref(0);
+const showSelect = ref(false);
 const loaded = ref(false);
+const containerRef = ref<HTMLElement | null>(null);
 
-onMounted(async () => {
-  await new Promise((r) => setTimeout(r, 500)); // 模拟 API
-  visibleItems.value = props.data;
-  loaded.value = true;
+// 切换下拉
+function toggleSelect() {
+  showSelect.value = !showSelect.value;
+}
+
+// 选择年份
+function selectYear(idx: number) {
+  selectIndex.value = idx;
+  showSelect.value = false;
+}
+
+// 点击空白关闭下拉
+function handleClickOutside(event: MouseEvent) {
+  if (!containerRef.value) return;
+  const target = event.target as Node;
+  if (!containerRef.value.contains(target)) {
+    showSelect.value = false;
+  }
+}
+
+// 监听父组件数据
+watch(
+  () => props.data,
+  async (newVal) => {
+    if (newVal?.length) {
+      visibleItems.value = newVal.map((plan) => ({
+        ...plan,
+        data: plan.data.map((item) => ({ ...item, showAnimation: false })),
+      }));
+
+      loaded.value = true;
+
+      await nextTick();
+      visibleItems.value[selectIndex.value].data.forEach((item, i) => {
+        if (item.status) {
+          setTimeout(() => (item.showAnimation = true), i * 100);
+        }
+      });
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
 <style scoped>
 .container {
   width: 100%;
-  --color: #e1e1e1;
-
-  background-size: 55px 55px;
-  border-radius: 1rem;
-  padding: 1rem;
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
-  -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: none !important;
+  /* border-radius: 1rem; */
+  /* padding: 1rem; */
+  /* backdrop-filter: blur(15px); */
+  /* -webkit-backdrop-filter: blur(15px); */
+  /* background-color: rgba(255, 255, 255, 0.1); */
+  /* border: 1px solid rgba(255, 255, 255, 0.2); */
   color: #fff;
+  max-width: none !important;
+  height: 100%; /* 填满父容器高度 */
+  overflow: hidden; /* 避免内部元素外溢 */
+  display: flex;
+  flex-direction: column;
 }
 
 .text-title {
@@ -91,15 +181,107 @@ onMounted(async () => {
   font-weight: bold;
   text-align: center;
   margin-bottom: 0.5rem;
+  position: relative;
+}
+/* 美化滚动条 */
+.task-list::-webkit-scrollbar {
+  width: 6px;
+}
+.task-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+.task-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* ---------- 骨架 ---------- */
+.skeleton-inline {
+  display: inline-block;
+  width: 60px;
+  height: 1.2em;
+  vertical-align: middle;
+  border-radius: 6px;
+  /* background: linear-gradient(90deg, #e5e5e5 25%, #f0f0f0 37%, #e5e5e5 63%); */
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.year-text {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.arrow {
+  transition: transform 0.2s ease;
+  fill: #fff;
+}
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+/* 下拉框 */
+.naive-dropdown {
+  position: relative;
+  min-width: 120px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background: rgba(50, 50, 50, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  z-index: 100;
+}
+
+.dropdown-inner {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(0px);
+  opacity: 1;
+  z-index: 11;
+}
+
+.dropdown-fade-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+.dropdown-fade-enter-to {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.dropdown-fade-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-item {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #fff;
+  white-space: nowrap;
+}
+.dropdown-item:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-radius: 4px;
+}
+
+/* 骨架屏 */
 .skeleton-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 200px;
-  transition: opacity 0.3s;
 }
 .skeleton-item {
   height: 22px;
@@ -117,7 +299,14 @@ onMounted(async () => {
   }
 }
 
-/* ---------- transition-group scale-in ---------- */
+.task-list {
+  flex: 1; /* 占满剩余空间 */
+  overflow-y: auto; /* 超出时滚动 */
+  padding-right: 8px; /* 避免滚动条遮盖内容 */
+  margin-top: 12px;
+}
+
+/* 任务列表动画 */
 .scale-in-enter-from {
   opacity: 0;
   transform: scale(0.8);
@@ -130,24 +319,21 @@ onMounted(async () => {
   transform: scale(1);
 }
 
-/* ---------- checkbox 样式 ---------- */
+/* 复选框动画 */
 .checkbox-container {
   display: flex;
   align-items: flex-start;
   user-select: none;
-  will-change: opacity, transform;
   color: #fff;
 }
 .task-checkbox {
   display: none;
 }
-
 .checkbox-label {
   display: flex;
   align-items: flex-start;
   cursor: default;
   font-size: 16px;
-  color: #374151;
   font-weight: 500;
   transition: all 0.2s ease;
   padding: 8px;
@@ -164,7 +350,7 @@ onMounted(async () => {
   border: 2px solid #d1d5db;
   border-radius: 6px;
   margin-right: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   background: #fff;
   display: flex;
   align-items: center;
@@ -192,7 +378,6 @@ onMounted(async () => {
   width: 14px;
   height: 14px;
   fill: white;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 .success-ripple {
   position: absolute;
@@ -207,11 +392,10 @@ onMounted(async () => {
   pointer-events: none;
 }
 .checkbox-text {
-  word-break: break-word;
   flex: 1;
   display: inline-block;
-  transition: all 0.3s ease;
   color: #f9f9f9;
+  transition: all 0.3s ease;
 }
 .text-completed {
   text-decoration: line-through;
@@ -235,7 +419,6 @@ onMounted(async () => {
 .task-checkbox:checked + .checkbox-label .success-ripple {
   animation: rippleSuccess 0.6s ease-out;
 }
-
 @keyframes checkPop {
   0% {
     transform: scale(1) rotate(0deg);

@@ -21,7 +21,7 @@
     <div class="max-h-[80vh] overflow-auto">
       <vue-json-pretty
         v-if="selectedFile && selected === 1"
-        :deep="3"
+        :deep="10"
         selectableType="single"
         editableTrigger="dblclick"
         :showSelectController="false"
