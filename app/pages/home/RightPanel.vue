@@ -165,7 +165,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from "vue";
 import TimelineArticle from "./component/TimelineArticle.vue";
-import RollingMessage from "./component/RollingMessage.vue";
+import RollingMessage from "./component/RollingMessage2.vue";
 
 const rollingMessageRef = ref<any>(null);
 const myPlans = ref([]);

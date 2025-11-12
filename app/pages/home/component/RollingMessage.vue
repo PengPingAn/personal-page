@@ -1,15 +1,22 @@
 <template>
   <div class="message-wrapper" ref="wrapperRef">
-    <div
-      class="message-content"
-      :style="{ animationDuration: animationDuration + 's' }"
-      @mouseenter="pause = true"
-      @mouseleave="pause = false"
-      :class="{ paused: pause }"
-    >
-      <div v-for="(item, index) in duplicatedMessages" :key="index" class="message-item">
-        <img :src="item.headUrl" alt="avatar" class="avatar" />
-        <p class="text">{{ item.content }}</p>
+    <!-- 添加一个内部容器 -->
+    <div class="message-inner-container">
+      <div
+        class="message-content"
+        :style="{ animationDuration: animationDuration + 's' }"
+        @mouseenter="pause = true"
+        @mouseleave="pause = false"
+        :class="{ paused: pause }"
+      >
+        <div
+          v-for="(item, index) in duplicatedMessages"
+          :key="index"
+          class="message-item"
+        >
+          <img :src="item.headUrl" alt="avatar" class="avatar" />
+          <p class="text">{{ item.content }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -48,6 +55,7 @@ const getMessage = async () => {
     const res = await $request.Get("/home/get_message_list");
     if (res.code === 200) {
       defaultMessages.value = res.data;
+      console.log(duplicatedMessages);
     } else {
       console.error("获取文件内容失败");
     }
@@ -77,12 +85,21 @@ defineExpose({
   justify-content: flex-end;
 }
 
+/* 新增内部容器样式 */
+.message-inner-container {
+  height: auto; /* 不限制高度 */
+  min-height: 100%; /* 至少充满容器 */
+  position: relative;
+}
+
 .message-content {
   display: flex;
   flex-direction: column;
   animation-name: scroll-up;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  /* 移除可能的高度限制 */
+  height: auto !important;
 }
 
 .message-content.paused {
@@ -94,6 +111,7 @@ defineExpose({
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
+  flex-shrink: 0; /* 防止消息项被压缩 */
 }
 
 .avatar {
@@ -106,6 +124,9 @@ defineExpose({
 .text {
   font-size: 0.9rem;
   opacity: 0.9;
+  white-space: nowrap; /* 防止文字换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes scroll-up {
