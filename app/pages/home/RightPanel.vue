@@ -1,18 +1,8 @@
 <template>
   <div class="right-panel">
     <GitHubHeatmap :data="heatmapData"> </GitHubHeatmap>
-    <Card class="my-4">
-      <MBTICharacterCard
-        mbti="INFJ"
-        name="提倡者"
-        description="内向、理想主义，善于理解他人，追求精神世界。"
-        :traits="[
-          { label: 'I/E', value: 90, tooltip: '倾向内向 (I) 与外向 (E) 的差异' },
-          { label: 'N/S', value: 80, tooltip: '直觉 (N) 与感官 (S) 的差异' },
-          { label: 'F/T', value: 70, tooltip: '情感 (F) 与思考 (T) 的差异' },
-          { label: 'J/P', value: 60, tooltip: '判断 (J) 与知觉 (P) 的差异' },
-        ]"
-      />
+    <Card class="my-4 min-h-[270px]">
+      <MBTICharacterCard :mbtiCharacter="mbtiCharacter" />
     </Card>
 
     <div class="flex flex-col xl:flex-row gap-4 min-h-[300px]">
@@ -51,10 +41,10 @@
         >
           <!-- 背景图片 -->
           <div
+            v-if="props.personalData?.location?.bgImg"
             class="absolute inset-0 bg-cover bg-center transition-filter duration-500 filter blur-sm group-hover:blur-0"
             :style="{
-              backgroundImage:
-                'url(https://q0.itc.cn/q_70/images03/20251001/344ea6c5614f4fb4b6930d0c4d779e1f.jpeg)',
+              backgroundImage: 'url(' + props.personalData?.location?.bgImg + ')',
             }"
           ></div>
 
@@ -63,17 +53,32 @@
             class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white"
           >
             <p class="flex flex-col items-center leading-none text-4xl">
+              <!-- 静态文字 -->
               <span>现</span>
               <span>位</span>
               <span>于</span>
               <br />
-              <span class="font-bold">广</span>
-              <span class="font-bold">州</span>
-              <span class="font-bold">市</span>
+
+              <!-- 城市，加粗 -->
+              <template
+                v-for="(char, index) in (props.personalData?.location?.city || '').split(
+                  ''
+                )"
+                :key="'city-' + index"
+              >
+                <span class="font-bold">{{ char }}</span>
+              </template>
               <br />
-              <span class="font-bold">天</span>
-              <span class="font-bold">河</span>
-              <span class="font-bold">区</span>
+
+              <!-- 区域，加粗 -->
+              <template
+                v-for="(char, index) in (
+                  props.personalData?.location?.region || ''
+                ).split('')"
+                :key="'region-' + index"
+              >
+                <span class="font-bold">{{ char }}</span>
+              </template>
             </p>
           </div>
         </Card>
@@ -88,10 +93,15 @@
               class="relative sayText quote-text m-8 text-4xl text-[#FFF] flex justify-center"
             >
               <div>
-                <span style="color: #36ddad">纵有疾风起</span>
-                <br />
-
-                <span>人生不言弃</span>
+                <template
+                  v-for="(line, index) in (
+                    props.personalData?.location?.motto || ''
+                  ).split('\n')"
+                  :key="index"
+                >
+                  <span :class="index === 0 ? 'text-green-400' : ''">{{ line }}</span
+                  ><br />
+                </template>
               </div>
             </div>
           </Card>
@@ -119,7 +129,7 @@
                 :canvas-width="150"
                 :canvas-height="280"
                 :particle-size="1"
-                image-src="https://img2.baidu.com/it/u=119787490,3418968819&fm=253&app=138&f=JPEG?w=800&h=1584"
+                :image-src="props.personalData?.particleImage"
                 :responsive-width="true"
                 :strength="0.1"
                 :radius="900"
@@ -159,6 +169,18 @@
         </Card>
       </div>
     </div>
+
+    <FloatingCard>
+      <template #trigger>
+        <span style="color: red">浙江"阿勒泰"</span>
+      </template>
+
+      <div>
+        <p>
+          https://www.xiaohongshu.com/404?source=/404/sec_sGGrqMnN?redirectPath=https%3A%2F%2Fwww.xiaohongshu.com%2Fexplore%2F67f0772e000000001c03c216%3Fapp_platform%3Dios%26app_version%3D8.79%26share_from_user_hidden%3Dtrue%26xsec_source%3Dapp_share%26type%3Dnormal%26xsec_token%3DCBkEClgWp5ivhriZb0ewmitvTCU6eBGflDb_5bQ1dlbKo%3D%26author_share%3D1%26xhsshare%3DCopyLink%26shareRedId%3DODgzMzM1PT82NzUyOTgwNjg0OTk0Sj89%26apptime%3D1745402632%26share_id%3Df3357e8caa26450f8364ee0b937ad4d6&error_code=300031&error_msg=%E5%BD%93%E5%89%8D%E7%AC%94%E8%AE%B0%E6%9A%82%E6%97%B6%E6%97%A0%E6%B3%95%E6%B5%8F%E8%A7%88&uuid=53a7d1ba-77da-43d4-9a19-59b9fe7172b4
+        </p>
+      </div>
+    </FloatingCard>
   </div>
 </template>
 
@@ -167,8 +189,20 @@ import { ref, onMounted, nextTick } from "vue";
 import TimelineArticle from "./component/TimelineArticle.vue";
 import RollingMessage from "./component/RollingMessage2.vue";
 
+const props = defineProps({
+  personalData: {
+    type: Object as PropType<any>,
+    default: () => ({}),
+  },
+  iconSize: {
+    type: Number,
+    default: 70,
+  },
+});
+
 const rollingMessageRef = ref<any>(null);
 const myPlans = ref([]);
+const mbtiCharacter = ref();
 
 const notifications = [
   {
@@ -493,6 +527,17 @@ onMounted(async () => {
     const res = await $request.Get("/home/get_matter_list");
     if (res.code === 200) {
       myPlans.value = res.data;
+    } else {
+      $toast?.error("获取数据失败");
+    }
+  } catch (err) {
+    console.error("获取内容失败:", err);
+  }
+
+  try {
+    const res = await $request.Get("/home/get_MBTI");
+    if (res.code === 200) {
+      mbtiCharacter.value = res.data;
     } else {
       $toast?.error("获取数据失败");
     }

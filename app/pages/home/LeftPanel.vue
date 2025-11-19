@@ -27,7 +27,7 @@
         </defs>
 
         <image
-          href="https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1760522936_bb6d63b9.jpg"
+          :href="props.personalData?.headUrl"
           width="100"
           height="100"
           clip-path="url(#bubbleClip)"
@@ -63,9 +63,9 @@
       </div>
 
       <div style="font-size: 40px">
-        开发者 ，
+        {{ props.personalData?.occupation }} ，
         <ResizableDashedLabel
-          text=" <平安/>"
+          :text="props.personalData?.name"
           :enabled="true"
           :resizable="false"
           bgColor="rgba(0,128,255,0.08)"
@@ -78,7 +78,7 @@
       </div>
 
       <div class="text-2xl flex items-center h-8 overflow-hidden relative">
-        <span>一位热爱生活的 </span>
+        <span>{{ props.personalData?.job.desc }} </span>
         <div class="relative w-[160px] h-8 overflow-hidden ml-2">
           <transition name="scroll-text" mode="out-in">
             <span
@@ -92,10 +92,8 @@
         </div>
       </div>
 
-      <div>
-        我是一名全栈开发者，喜欢用代码和设计搭建小而美的产品。
-        <br />
-        对新技术充满好奇，也常在探索中学习，希望能和大家一起进步。
+      <div class="whitespace-pre-line">
+        {{ props.personalData?.introduction }}
       </div>
 
       <!-- 按钮 -->
@@ -109,11 +107,20 @@
           ref="buttonRefs"
           :style="buttonStyles[index]"
         >
-          <span :class="btn.icon"></span>{{ btn.label }}
+          <a
+            :href="
+              btn.label === 'Email' && btn.url ? `mailto:${btn.url}` : btn.url || '#'
+            "
+            class="flex gap-2 items-center"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span :class="btn.icon"></span>{{ btn.label }}
+          </a>
         </div>
       </div>
 
-      <TooltipSlot class="flex-none">
+      <!-- <TooltipSlot class="flex-none">
         <template #trigger>
           <div class="flex items-center gap-4 flex-wrap">
             <div
@@ -149,41 +156,143 @@
             </div>
           </div>
         </template>
-      </TooltipSlot>
+      </TooltipSlot> -->
+      <FloatingCard>
+        <template #trigger>
+          <div class="flex items-center gap-4 flex-wrap">
+            <div
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-md shadow-md rounded-[2rem] relative cursor-pointer"
+            >
+              <span class="line-md--coffee-loop"></span>
+              请作者喝咖啡
+            </div>
+          </div>
+        </template>
+
+        <div class="">
+          <div class="flex gap-4">
+            <img
+              :src="imgUlrs[0]"
+              alt="悬浮图片"
+              class="w-48 h-48 mb-2"
+              style="border-radius: 0.5rem"
+            />
+            <img
+              :src="imgUlrs[1]"
+              alt="悬浮图片"
+              class="w-48 h-48 mb-2"
+              style="border-radius: 0.5rem"
+            />
+          </div>
+          <div
+            class="flex items-center justify-center text-gray-500 text-sm font-medium gap-2"
+          >
+            <span class="text-gray-400">——</span>
+            <span>谢谢你的支持！</span>
+            <span class="text-gray-400">——</span>
+          </div>
+        </div>
+      </FloatingCard>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+  watch,
+} from "vue";
 import headPendant from "../../../public/img/headPendant.gif";
+import { useRouter } from "vue-router";
 
-const imgUlrs = ref([
-  "https://img1.fjdaily.com/app/images/2024-05/20/7f9815fd-3570-46ab-ba84-8ed3eee95810.jpg",
-  "https://img2.baidu.com/it/u=2664851014,2738471250&fm=253&fmt=auto&app=138&f=PNG?w=500&h=680",
-]);
-const texts = ["创造者", "全栈开发者", "设计者"];
+const props = defineProps({
+  personalData: {
+    type: Object as PropType<any>,
+    default: () => ({}),
+  },
+  iconSize: {
+    type: Number,
+    default: 70,
+  },
+});
+
+const imgUlrs = ref([]);
+
+// ----------------- 职业轮播 -----------------
+const texts = ref<string[]>([]);
 const currentIndex = ref(0);
-const currentText = computed(() => texts[currentIndex.value]);
+const currentText = computed(() => texts.value[currentIndex.value] || "");
 let interval: number;
 
+// ----------------- 按钮 -----------------
+const buttons = ref<{ label: string; icon: string; url: string }[]>([]);
+const buttonStyles = reactive<{ transform: string; transition: string }[]>([]);
+
+// ----------------- refs -----------------
 const avatarRef = ref<HTMLElement>();
 const textRef = ref<HTMLElement>();
 const buttonRefs = ref<HTMLElement[]>([]);
 const coffeeBtnRef = ref<HTMLElement | null>(null);
 const router = useRouter();
-
 const cardStyle = reactive({ left: "0px", top: "0px" });
 
+// ----------------- 跳转 -----------------
 const jumpAdmin = () => {
   router.push("/admin/layout");
 };
 
-onMounted(() => {
-  interval = window.setInterval(() => {
-    currentIndex.value = (currentIndex.value + 1) % texts.length;
-  }, 3000);
+// ----------------- watch personalData -----------------
+watch(
+  () => props.personalData,
+  (newVal) => {
+    if (!newVal) return;
 
+    // 处理 texts
+    if (Array.isArray(newVal.job?.item) && newVal.job.item.length > 0) {
+      texts.value = newVal.job.item;
+      currentIndex.value = 0;
+
+      // 清除旧定时器
+      if (interval) clearInterval(interval);
+
+      interval = window.setInterval(() => {
+        currentIndex.value = (currentIndex.value + 1) % texts.value.length;
+      }, 3000);
+    }
+
+    // 处理 buttons
+    if (Array.isArray(newVal.contact) && newVal.contact.length > 0) {
+      buttons.value = newVal.contact.map((item, index) => ({
+        label: item.label,
+        icon: item.icon || `default-icon-${index}`,
+        url: item.url,
+      }));
+
+      // 同步生成 buttonStyles
+      buttonStyles.length = 0;
+      buttons.value.forEach(() => {
+        buttonStyles.push({
+          transform: "translate(0,0)",
+          transition: "transform 0.2s cubic-bezier(0.22,1,0.36,1)",
+        });
+      });
+    }
+
+    //处理赞助图片 imgUlrs
+    if (Array.isArray(newVal.sponsorshipUrls) && newVal.sponsorshipUrls.length > 0) {
+      imgUlrs.value = newVal.sponsorshipUrls;
+    }
+  },
+  { immediate: true, deep: true }
+);
+
+// ----------------- mounted -----------------
+onMounted(() => {
   nextTick(() => {
     animateIn(avatarRef.value!, 0);
     animateIn(textRef.value!, 200);
@@ -196,12 +305,14 @@ onMounted(() => {
   initBubble();
 });
 
+// ----------------- beforeUnmount -----------------
 onBeforeUnmount(() => {
-  clearInterval(interval);
+  if (interval) clearInterval(interval);
   window.removeEventListener("scroll", updateCardPosition);
   window.removeEventListener("resize", updateCardPosition);
 });
 
+// ----------------- animateIn -----------------
 function animateIn(el: HTMLElement, delay = 0) {
   el.style.transition = "all 0.8s cubic-bezier(0.22,1,0.36,1)";
   setTimeout(() => {
@@ -211,27 +322,22 @@ function animateIn(el: HTMLElement, delay = 0) {
 }
 
 // ----------------- 按钮悬浮效果 -----------------
-const buttons = [
-  { label: "Gitee", icon: "simple-icons--gitee" },
-  { label: "Email", icon: "streamline-ultimate-color--send-email-envelope" },
-  { label: "Blog", icon: "la--blog" },
-];
-const buttonStyles = reactive(
-  buttons.map(() => ({
-    transform: "translate(0,0)",
-    transition: "transform 0.2s cubic-bezier(0.22,1,0.36,1)",
-  }))
-);
 const handleMouseMove = (e: MouseEvent, index: number) => {
   const el = e.currentTarget as HTMLElement;
   const rect = el.getBoundingClientRect();
   const offsetX = ((e.clientX - rect.left - rect.width / 2) / rect.width) * 15;
   const offsetY = ((e.clientY - rect.top - rect.height / 2) / rect.height) * 15;
-  buttonStyles[index].transform = `translate(${offsetX}px, ${offsetY}px)`;
+
+  if (buttonStyles[index]) {
+    buttonStyles[index].transform = `translate(${offsetX}px, ${offsetY}px)`;
+  }
 };
+
 const handleMouseLeave = (index: number) => {
-  buttonStyles[index].transition = "transform 0.5s cubic-bezier(0.22,1,0.36,1)";
-  buttonStyles[index].transform = `translate(0,0)`;
+  if (buttonStyles[index]) {
+    buttonStyles[index].transition = "transform 0.5s cubic-bezier(0.22,1,0.36,1)";
+    buttonStyles[index].transform = `translate(0,0)`;
+  }
 };
 
 // ----------------- 咖啡悬浮卡片 -----------------
@@ -243,7 +349,7 @@ const updateCardPosition = () => {
   cardStyle.transform = "translateX(-50%)";
 };
 
-// ---------------- 水泡 ----------------
+// ----------------- 水泡 -----------------
 const bubblePath = ref("");
 const points = ref(
   Array.from({ length: 16 }).map((_, i) => ({

@@ -1,6 +1,7 @@
 <template>
   <div
-    class="perspective-container relative flex min-h-screen w-full items-center justify-center overflow-clip"
+    class="perspective-container relative flex min-h-screen w-full items-center justify-center overflow-hidden"
+    ref="containerRef"
   >
     <p
       class="absolute top-1/2 mx-auto max-w-sm -translate-y-3/4 text-center text-2xl font-black text-neutral-800 md:text-4xl px-4"
@@ -23,7 +24,8 @@
         :src="card.img"
         :alt="card.title"
         class="card-img"
-        :style="{ zIndex: card.style.zIndex }"
+        @load="card.loaded = true"
+        :class="{ loaded: card.loaded }"
       />
       <h3 class="mt-4 text-center text-2xl font-bold text-neutral-300">
         {{ card.title }}
@@ -33,176 +35,191 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, reactive, onMounted, watch, nextTick, type PropType } from "vue";
 
-function getRandom(min, max) {
+interface Photo {
+  title: string;
+  img: string;
+}
+
+const props = defineProps({
+  photos: {
+    type: Array as PropType<Photo[]>,
+    default: () => [],
+  },
+});
+
+const containerRef = ref<HTMLElement | null>(null);
+const cardRefs = ref<HTMLElement[]>([]);
+const cards = ref<any[]>([]);
+const draggingIndex = ref<number | null>(null);
+let initialMouseX = 0;
+let initialMouseY = 0;
+
+function getRandom(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-const baseCards = [
-  {
-    title: "Tyler Durden",
-    img:
-      "https://images.unsplash.com/photo-1732310216648-603c0255c000?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "The Narrator",
-    img:
-      "https://images.unsplash.com/photo-1697909623564-3dae17f6c20b?q=80&w=2667&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "Iceland",
-    img:
-      "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=2600&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "Japan",
-    img:
-      "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=3648&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "Norway",
-    img:
-      "https://images.unsplash.com/photo-1421789665209-c9b2a435e3dc?q=80&w=3542&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "New Zealand",
-    img:
-      "https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=3070&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-  {
-    title: "Canada",
-    img:
-      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop&ixlib=rb-4.0.3",
-  },
-];
+// 预加载图片
+function preloadImages(photos: Photo[]) {
+  return Promise.all(
+    photos.map(
+      (p) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.src = p.img;
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        })
+    )
+  );
+}
 
-const cards = reactive([]);
-const cardRefs = ref([]);
-const draggingIndex = ref(null);
-let initialX = 0;
-let initialY = 0;
+async  function initializeCards() {
+  if (!containerRef.value) return;
 
-// 初始化卡片位置
-function initializeCards() {
-  baseCards.forEach((c) => {
+   await preloadImages(props.photos); // 确保图片加载完成
+
+  const containerRect = containerRef.value.getBoundingClientRect();
+  const containerWidth = containerRect.width;
+  const containerHeight = containerRect.height;
+
+  const cardWidth = 200;
+  const cardHeight = 300;
+
+  cards.value = props.photos.map((p) => {
     const rotation = getRandom(-15, 15);
+    const top = getRandom(0, containerHeight - cardHeight);
+    const left = getRandom(0, containerWidth - cardWidth);
 
-    // 将初始位置转换为 translate 值
-    const initialX = 0;
-    const initialY = 0;
-
-    const initialTransform = `translate(${initialX}px, ${initialY}px) rotate(${rotation}deg)`;
-
-    cards.push({
-      title: c.title,
-      img: c.img,
-      initialRotation: rotation,
-      x: initialX,
-      y: initialY,
-      initialTop: getRandom(0, 60),
-      initialLeft: getRandom(0, 60),
-      style: {
-        transform: initialTransform,
+    return {
+      title: p.title,
+      img: p.img,
+      rotation,
+      loaded: false,
+      x: 0,
+      y: 0,
+      style: reactive({
+        position: "absolute",
+        top: `${top}px`,
+        left: `${left}px`,
+        transform: `rotate(${rotation}deg)`,
         zIndex: 10,
-      },
-      displayWidth: 0,
-      displayHeight: 0,
-      initialTransform: initialTransform,
-    });
+        transition: "none",
+      }),
+    };
+  });
+
+  nextTick(() => {
+    cardRefs.value = cardRefs.value.slice(0, cards.value.length);
   });
 }
 
-initializeCards();
 
-function dragStart(e, index) {
+
+// 拖拽逻辑
+function dragStart(e: MouseEvent | TouchEvent, index: number) {
   draggingIndex.value = index;
-  cards.forEach((c, i) => (c.style.zIndex = i === index ? 50 : 10));
 
-  const card = cards[index];
-  const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
-  const y = e.type.includes("touch") ? e.touches[0].clientY : e.clientY;
-  initialX = x - card.x;
-  initialY = y - card.y;
+  // 置顶点击的卡片
+  const maxZ = Math.max(...cards.value.map((c) => c.style.zIndex || 0));
+  cards.value[index].style.zIndex = maxZ + 1;
+
+  const card = cards.value[index];
+  const clientX = e.type.includes("touch")
+    ? (e as TouchEvent).touches[0].clientX
+    : (e as MouseEvent).clientX;
+  const clientY = e.type.includes("touch")
+    ? (e as TouchEvent).touches[0].clientY
+    : (e as MouseEvent).clientY;
+
+  initialMouseX = clientX - card.x;
+  initialMouseY = clientY - card.y;
+
   document.addEventListener("mousemove", drag);
   document.addEventListener("mouseup", dragEnd);
   document.addEventListener("touchmove", drag);
   document.addEventListener("touchend", dragEnd);
 }
 
-function drag(e) {
+function drag(e: MouseEvent | TouchEvent) {
   if (draggingIndex.value === null) return;
   e.preventDefault();
-  const card = cards[draggingIndex.value];
-  const x = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
-  const y = e.type.includes("touch") ? e.touches[0].clientY : e.clientY;
-  card.x = x - initialX;
-  card.y = y - initialY;
+
+  const card = cards.value[draggingIndex.value];
+  const clientX = e.type.includes("touch")
+    ? (e as TouchEvent).touches[0].clientX
+    : (e as MouseEvent).clientX;
+  const clientY = e.type.includes("touch")
+    ? (e as TouchEvent).touches[0].clientY
+    : (e as MouseEvent).clientY;
+
+  card.x = clientX - initialMouseX;
+  card.y = clientY - initialMouseY;
+
   updateCardStyle(card);
 }
 
 function dragEnd() {
   if (draggingIndex.value === null) return;
-  const card = cards[draggingIndex.value];
+  const card = cards.value[draggingIndex.value];
   card.style.transition = "transform 0.3s cubic-bezier(0.2, 0, 0, 1)";
   updateCardStyle(card);
-  // 更新初始 transform 为当前状态
-  card.initialTransform = `translate(${card.x}px, ${card.y}px) rotate(${card.initialRotation}deg)`;
   draggingIndex.value = null;
+
+  document.removeEventListener("mousemove", drag);
+  document.removeEventListener("mouseup", dragEnd);
+  document.removeEventListener("touchmove", drag);
+  document.removeEventListener("touchend", dragEnd);
 }
 
-function tilt(e, index) {
+// tilt 悬浮
+function tilt(e: MouseEvent, index: number) {
   if (draggingIndex.value === index) return;
-  const card = cards[index];
+  const card = cards.value[index];
   const rect = cardRefs.value[index].getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
   const deltaX = e.clientX - centerX;
   const deltaY = e.clientY - centerY;
 
-  const rotateY = (deltaX / rect.width) * 25;
-  const rotateX = -(deltaY / rect.height) * 25;
-  const glareOpacity = Math.abs(deltaX / rect.width) * 0.2;
+  const rotateY = (deltaX / rect.width) * 15;
+  const rotateX = -(deltaY / rect.height) * 15;
+  const glareOpacity = Math.min(Math.abs(deltaX / rect.width) * 0.2, 0.2);
 
-  // 基于初始 transform 添加悬浮效果
-  card.style.transform = `${card.initialTransform} rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-  const glare = cardRefs.value[index].querySelector(".glare");
-  if (glare) glare.style.opacity = glareOpacity;
+  card.style.transform = `translate(${card.x}px, ${card.y}px) rotate(${card.rotation}deg) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+
+  const glare = cardRefs.value[index].querySelector(".glare") as HTMLElement;
+  if (glare) glare.style.opacity = glareOpacity.toString();
 }
 
-function resetTilt(index) {
-  if (draggingIndex.value === index) return;
-  const card = cards[index];
-  // 恢复到初始 transform 状态
-  card.style.transform = card.initialTransform;
-  const glare = cardRefs.value[index].querySelector(".glare");
-  if (glare) glare.style.opacity = 0;
+function resetTilt(index: number) {
+  const card = cards.value[index];
+  card.style.transform = `translate(${card.x}px, ${card.y}px) rotate(${card.rotation}deg)`;
+  const glare = cardRefs.value[index].querySelector(".glare") as HTMLElement;
+  if (glare) glare.style.opacity = "0";
 }
 
-function updateCardStyle(card) {
+function updateCardStyle(card: any) {
   card.style.transition = "none";
-  card.style.transform = `translate(${card.x}px, ${card.y}px) rotate(${card.initialRotation}deg)`;
-  // 同时更新初始 transform
-  card.initialTransform = card.style.transform;
+  card.style.transform = `translate(${card.x}px, ${card.y}px) rotate(${card.rotation}deg)`;
 }
 
+// SSR 安全初始化
 onMounted(() => {
-  cardRefs.value = cardRefs.value.slice(0, cards.length);
-
-  // 在挂载后应用初始位置
-  cards.forEach((card, index) => {
-    const element = cardRefs.value[index];
-    if (element) {
-      // 设置初始位置
-      element.style.top = `${card.initialTop}%`;
-      element.style.left = `${card.initialLeft}%`;
-
-      // 保存初始 transform
-      card.initialTransform = card.style.transform;
-    }
-  });
+  initializeCards();
 });
+
+// 支持异步更新 props.photos
+watch(
+  () => props.photos,
+  (newPhotos) => {
+    if (newPhotos && newPhotos.length) {
+      initializeCards();
+    }
+  }
+);
 </script>
 
 <style scoped>
@@ -216,9 +233,9 @@ onMounted(() => {
   touch-action: none;
   will-change: transform;
   transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-  backdrop-filter: blur(15px); /* 毛玻璃模糊 */
+  backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .draggable-card:active {
@@ -245,5 +262,13 @@ onMounted(() => {
   background: white;
   opacity: 0;
   transition: opacity 0.1s ease-out;
+}
+
+.card-img {
+  filter: blur(20px);
+  transition: filter 0.3s ease;
+}
+.card-img.loaded {
+  filter: blur(0);
 }
 </style>

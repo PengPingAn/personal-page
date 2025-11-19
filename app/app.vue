@@ -5,14 +5,14 @@ import Toast from "./components/Toast.vue";
 <template>
   <div class="page-container flex flex-col w-full min-h-screen gap-4">
     <!-- 模糊层 -->
-    <div class="blur-bg"></div>
+    <!-- <div class="blur-bg"></div> -->
     <!-- <div class="firefly-container" ref="fireflyContainer" aria-hidden="true"></div> -->
 
-    <div class="flex flex-col xl:flex-row w-full gap-4 min-w-0">
-      <!-- 主页面内容 -->
-      <NuxtPage />
-      <Toast />
-    </div>
+    <!-- <div class="flex flex-col xl:flex-row w-full gap-4 min-w-0"> -->
+    <!-- 主页面内容 -->
+    <NuxtPage />
+    <Toast />
+    <!-- </div> -->
   </div>
 </template>
 
@@ -28,11 +28,11 @@ body {
 
 /* 背景 */
 body {
-  background: linear-gradient(to bottom left, rgb(255, 255, 255) 50%, black 50%);
+  /* background: linear-gradient(to bottom left, rgb(255, 255, 255) 50%, black 50%);
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
-  background-image: url("../public/img/bg.png");
+  background-image: url("../public/img/bg.png");*/
   overflow-x: hidden;
 }
 

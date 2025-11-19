@@ -1,34 +1,37 @@
 <template>
-  <div class="page-container">
-    <div class="firefly-container" ref="fireflyContainer" aria-hidden="true"></div>
-    <!-- 左右两列容器 -->
-    <div class="layout-container">
-      <!-- 左侧 LeftPanel 容器，限制高度 -->
-      <div class="left-wrapper">
-        <LeftPanel />
+  <div class="flex flex-col xl:flex-row w-full gap-4 min-w-0 bg">
+    <div class="blur-bg"></div>
+    <div class="page-container">
+      <div class="firefly-container" ref="fireflyContainer" aria-hidden="true"></div>
+      <!-- 左右两列容器 -->
+      <div class="layout-container">
+        <!-- 左侧 LeftPanel 容器，限制高度 -->
+        <div class="left-wrapper">
+          <LeftPanel :personalData="personalData" />
+        </div>
+
+        <!-- 右侧 RightPanel -->
+        <RightPanel :personalData="personalData" />
       </div>
 
-      <!-- 右侧 RightPanel -->
-      <RightPanel />
-    </div>
-
-    <div class="mt-4">
-      <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
-        <!-- <TextHighlight class="bg-gradient-to-r from-indigo-300 to-purple-300">
+      <div class="mt-4">
+        <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
+          <!-- <TextHighlight class="bg-gradient-to-r from-indigo-300 to-purple-300">
           我的一些作品
         </TextHighlight> -->
+          <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
+            ───我的作品───
+          </Text3d>
+        </div>
+        <ProjectTabs :projectsData="projectsData"></ProjectTabs>
+      </div>
+      <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
         <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
-          ───我的作品───
+          ───随便拍拍───
         </Text3d>
       </div>
-      <ProjectTabs :projectsData="projectsData"></ProjectTabs>
+      <DraggableCards :photos="photos"></DraggableCards>
     </div>
-    <div class="font-heading text-6xl text-center m-16 text-[#007fff]">
-      <Text3d class="font-bold max-md:text-7xl" shadow-color="red" :animate="false">
-        ───随便拍拍───
-      </Text3d>
-    </div>
-    <DraggableCards></DraggableCards>
   </div>
 </template>
 
@@ -40,6 +43,8 @@ import { onMounted } from "vue";
 const fireflyContainer = ref<HTMLDivElement | null>(null);
 const numFireflies = 20;
 const projectsData = ref<any>(null);
+const personalData = ref<any>(null);
+const photos = ref([]);
 
 function createFireflies() {
   if (!fireflyContainer.value) return;
@@ -95,10 +100,47 @@ onMounted(async () => {
   } catch (err) {
     console.error("获取文件内容失败:", err);
   }
+
+  try {
+    const res = await $request.Get("/home/get_personal");
+    if (res.code === 200) {
+      personalData.value = res.data;
+    } else {
+      $toast?.error("获取失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
+
+  try {
+    const res = await $request.Get("/home/get_photos");
+    if (res.code === 200) {
+      photos.value = res.data;
+    } else {
+      $toast?.error("获取失败");
+    }
+  } catch (err) {
+    console.error("获取文件内容失败:", err);
+  }
 });
 </script>
 
 <style scoped>
+.bg {
+  background-image: url("../../public/img/bg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  /* backdrop-filter: blur(0px); */
+}
+.blur-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.15);
+}
 .page-container {
   max-width: 1400px;
   margin: 0 auto;

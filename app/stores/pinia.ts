@@ -15,48 +15,62 @@ interface MessageInfo {
 export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     token: useCookie("web-token").value || "",
-    username: "",
-    head: "",
+    username: useCookie("username").value || "",
+    head: useCookie("head").value || "",
   }),
   actions: {
     setToken(token: string) {
       this.token = token;
-      useCookie("web-token").value = token;
+      setCookieWithOption("web-token", token, { days: 7 });
     },
     setUsername(username: string) {
       this.username = username;
-      useCookie("username").value = username;
+      setCookieWithOption("username", username, { days: 7 });
     },
     setHead(head: string) {
       this.head = head;
-      useCookie("head").value = head;
+      setCookieWithOption("head", head, { days: 7 });
     },
     logout() {
       this.reset();
-      // 清空 cookie
-      useCookie("web-token").value = "";
-      useCookie("username").value = "";
-      useCookie("head").value = "";
+      ["web-token", "username", "head"].forEach((name) =>
+        setCookieWithOption(name, "", { days: -1 })
+      );
     },
     reset() {
-      this.$reset(); // ✅ Pinia 自带的方法，重置 state 为初始值
+      this.$reset();
     },
   },
-  persist: true, // ✅ 现在可以用了
+  persist: true,
 });
 
 export const useMessageStore = defineStore("message-info", {
   state: (): MessageInfo => ({
-    name: "",
-    email: "",
+    name: useCookie("message-info-name").value || "",
+    email: useCookie("message-info-email").value || "",
   }),
   actions: {
     setMessageInfo(name: string, email: string) {
       this.name = name;
       this.email = email;
-      useCookie("message-info-name").value = name;
-      useCookie("message-info-email").value = email;
+      // permanent = true
+      setCookieWithOption("message-info-name", name, { permanent: true });
+      setCookieWithOption("message-info-email", email, { permanent: true });
     },
   },
-  persist: true, // 开启持久化
+  persist: true,
 });
+
+function setCookieWithOption(
+  name: string,
+  value: string,
+  options?: { days?: number; permanent?: boolean }
+) {
+  if (options?.permanent) {
+    // 设置为长期 Cookie，几乎等于永久（10 年）
+    useCookie(name, { maxAge: 60 * 60 * 24 * 365 * 10 }).value = value;
+  } else {
+    const days = options?.days ?? 7;
+    useCookie(name, { maxAge: 60 * 60 * 24 * days }).value = value;
+  }
+}

@@ -41,7 +41,7 @@ export default defineNuxtPlugin(() => {
           useCookie("web-token").value = "";
           // 跳转登录页（Nuxt Router）
           setTimeout(() => {
-            window.location.href = "/admin/login2";
+            window.location.href = "/admin/login";
           }, 500);
         } else {
           window.$toast?.error(res.data.msg || "请求错误");
@@ -58,7 +58,7 @@ export default defineNuxtPlugin(() => {
           window.$toast?.error("未授权，请重新登录");
           useCookie("web-token").value = "";
           setTimeout(() => {
-            window.location.href = "/admin/login2";
+            window.location.href = "/admin/";
           }, 500);
         } else if (status === 403) {
           window.$toast?.error("权限不足");

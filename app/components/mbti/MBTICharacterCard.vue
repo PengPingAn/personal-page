@@ -1,5 +1,5 @@
 <template>
-  <div class="mbti-card-wrapper">
+  <div class="mbti-card-wrapper" v-if="props.mbtiCharacter">
     <div class="mbti-card">
       <!-- 左侧人物 -->
       <div class="character">
@@ -7,32 +7,26 @@
         <div class="mbti-badge">{{ mbti }}</div>
         <div class="glow"></div>
       </div>
-
       <!-- 右侧信息 -->
       <div class="info">
         <h2 class="name">{{ name }}</h2>
         <p class="description">{{ description }}</p>
-
-        <div class="traits">
+        <div class="trait">
           <div
             class="trait-row"
-            v-for="(trait, index) in traits"
-            :key="trait.label"
+            v-for="(item, index) in traitList"
+            :key="item.label"
             :style="{ animationDelay: `${index * 0.2}s` }"
           >
-            <div class="trait-label">
-              {{ trait.label }}
-            </div>
-
-            <div class="tooltip-wrapper" v-if="trait.tooltip">
+            <div class="trait-label">{{ item.label }}</div>
+            <div class="tooltip-wrapper" v-if="item.tooltip">
               <span class="tooltip-icon">?</span>
-              <span class="tooltip-text">{{ trait.tooltip }}</span>
+              <span class="tooltip-text">{{ item.tooltip }}</span>
             </div>
-
             <div class="bar-wrapper">
               <div class="bar-background"></div>
-              <div class="bar" :style="{ width: trait.animatedWidth + '%' }">
-                <span class="percentage">{{ trait.displayedValue }}%</span>
+              <div class="bar" :style="{ width: item.displayedValue + '%' }">
+                <span class="percentage">{{ item.displayedValue }}%</span>
               </div>
             </div>
           </div>
@@ -43,72 +37,100 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, nextTick, watch, onMounted } from "vue";
 
-interface Trait {
+interface TraitData {
   label: string;
   value: number;
   tooltip?: string;
   animatedWidth?: number;
   displayedValue?: number;
 }
-
-interface Props {
+interface MBTICharacter {
   mbti: string;
   name: string;
   description: string;
-  traits: Trait[];
+  imgUrl?: string;
+  data: TraitData[];
 }
 
-const props = defineProps<Props>();
-const { mbti, name, description } = props;
+const props = defineProps<{ mbtiCharacter: MBTICharacter }>();
 
-const traits = ref(
-  props.traits.map((trait) => ({
-    ...trait,
-    animatedWidth: 0,
-    displayedValue: 0,
-  }))
-);
+/* 基本字段 */
+const mbti = computed(() => props.mbtiCharacter?.mbti ?? "");
+const name = computed(() => props.mbtiCharacter?.name ?? "");
+const description = computed(() => props.mbtiCharacter?.description ?? "");
 
-const mbtiMap = {
-  INFJ: {
-    img:
-      "https://liuyuyang.net/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FINFJ.aec7e324.png&w=640&q=75",
-  },
-  INFP: { img: "https://i.ibb.co/3W8w2pV/infp.png" },
-  ENFP: { img: "https://i.ibb.co/xjQGbH1/enfp.png" },
-  ENFJ: { img: "https://i.ibb.co/0sZjFHz/enfj.png" },
-};
+/* 图片 */
+const characterImg = computed(() => {
+  return (
+    props.mbtiCharacter?.imgUrl ||
+    "https://liuyuyang.net/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FINFJ.aec7e324.png&w=640&q=75"
+  );
+});
 
-const characterImg =
-  mbtiMap[mbti]?.img ||
-  "https://liuyuyang.net/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FINFJ.aec7e324.png&w=640&q=75";
+/* 动画 trait 列表 */
+const traitList = ref<TraitData[]>([]);
 
-onMounted(async () => {
-  await nextTick();
-  traits.value.forEach((trait, index) => {
-    setTimeout(() => {
-      const duration = 1000;
-      const stepTime = 20;
-      const steps = duration / stepTime;
-      let currentStep = 0;
-      const endValue = trait.value;
+/* 初始化动画数据 */
+function initTraits() {
+  if (!import.meta.client) return; // SSR 安全
+  if (!props.mbtiCharacter?.data) return;
 
-      const interval = setInterval(() => {
-        currentStep++;
-        const progress = currentStep / steps;
-        trait.animatedWidth = endValue * progress;
-        trait.displayedValue = Math.round(endValue * progress);
+  // 避免重复初始化
+  if (
+    traitList.value.length === props.mbtiCharacter.data.length &&
+    traitList.value.every(
+      (item, index) => item.label === props.mbtiCharacter.data[index].label
+    )
+  ) {
+    return;
+  }
 
-        if (currentStep >= steps) {
-          trait.animatedWidth = endValue;
-          trait.displayedValue = endValue;
-          clearInterval(interval);
-        }
-      }, stepTime);
-    }, index * 200);
+  traitList.value = props.mbtiCharacter.data.map((t) =>
+    reactive({
+      ...t,
+      animatedWidth: 0,
+      displayedValue: 0,
+    })
+  );
+
+  nextTick(() => {
+    traitList.value.forEach((item, index) => {
+      setTimeout(() => {
+        const duration = 1000;
+        const stepTime = 20;
+        const steps = duration / stepTime;
+        let current = 0;
+        const end = item.value;
+
+        const timer = setInterval(() => {
+          current++;
+          const progress = current / steps;
+
+          item.animatedWidth = end * progress;
+          item.displayedValue = Math.round(end * progress);
+
+          if (current >= steps) {
+            item.animatedWidth = end;
+            item.displayedValue = end;
+            clearInterval(timer);
+          }
+        }, stepTime);
+      }, index * 200);
+    });
   });
+}
+
+/* 只在客户端首次挂载执行动画 */
+onMounted(() => {
+  initTraits();
+
+  // 监听父组件传入数据变化，动画重置
+  watch(
+    () => props.mbtiCharacter,
+    () => initTraits()
+  );
 });
 </script>
 
@@ -125,15 +147,11 @@ onMounted(async () => {
   border-radius: 1rem;
   overflow: hidden;
   width: 100%;
-  color: #fff;
-  /* background: #2c3e50; */
-  /* backdrop-filter: blur(15px);  */
-  -webkit-backdrop-filter: blur(15px);
-  /* background-color: rgba(255, 255, 255, 0.1); */
-  /* border: 1px solid rgba(255, 255, 255, 0.2); */
-}
-
-/* 人物部分 */
+  color: #fff; /* background: #2c3e50; */ /* backdrop-filter: blur(15px); */
+  -webkit-backdrop-filter: blur(
+    15px
+  ); /* background-color: rgba(255, 255, 255, 0.1); */ /* border: 1px solid rgba(255, 255, 255, 0.2); */
+} /* 人物部分 */
 .character {
   position: relative;
   width: 40%;
@@ -191,9 +209,7 @@ onMounted(async () => {
   font-size: 0.75rem;
   z-index: 3;
   background: rgba(0, 0, 0, 0.3);
-}
-
-/* 信息部分 */
+} /* 信息部分 */
 .info {
   flex: 1;
   padding: 1rem;
@@ -210,14 +226,12 @@ onMounted(async () => {
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
-
-.traits {
+.trait {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   width: 100%;
 }
-
 .trait-row {
   display: flex;
   align-items: center;
@@ -266,7 +280,6 @@ onMounted(async () => {
 .tooltip-wrapper:hover .tooltip-text {
   opacity: 1;
 }
-
 .bar-wrapper {
   flex: 1;
   height: 12px;
@@ -301,7 +314,6 @@ onMounted(async () => {
 .percentage {
   white-space: nowrap;
 }
-
 @keyframes slideIn {
   0% {
     opacity: 0;
@@ -311,9 +323,7 @@ onMounted(async () => {
     opacity: 1;
     transform: translateX(0);
   }
-}
-
-/* ------------------响应式 H5 ------------------ */
+} /* ------------------响应式 H5 ------------------ */
 @media (max-width: 640px) {
   .mbti-card {
     flex-direction: column;
