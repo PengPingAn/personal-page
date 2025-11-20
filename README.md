@@ -1,30 +1,48 @@
-# Nuxt Minimal Starter
+# 个人主页
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+这是一个基于 **Vue 3 + Nuxt 4** 的个人主页模板，开箱即用，适合展示博客、RSS、项目和个人信息。后端使用 **Node.js**，通过 **JSON 文件**存储数据，无需数据库配置。  
 
-## Setup
+## 📷 项目截图
 
-Make sure to install dependencies:
+![首页](https://gitee.com/leefugui/love-world-image-service/raw/master/images/20251107/eca6c79c-037c-479f-9e97-3d544c262033.png)
+![首页](https://gitee.com/leefugui/love-world-image-service/raw/master/images/20251107/2b22deca-2d4d-468c-a2a7-70a8cd3c4dc9.png)
+![首页](https://gitee.com/leefugui/love-world-image-service/raw/master/images/20251107/4f2af15c-4e0a-4350-b10a-21080dfd0795.png)
+![后台](https://gitee.com/leefugui/love-world-image-service/raw/master/images/20251107/1763628189_9c149c61.png)
+![后台](https://gitee.com/leefugui/love-world-image-service/raw/master/images/20251107/a75ced4c-ac3c-4cf9-a968-997eddfd28e7.png)
 
-```bash
-# npm
+技术栈：
+- 前端：Vue 3、Nuxt 4、TypeScript、Pinia、Axios  
+- 组件：Vue Json Pretty、JsonEditorVue  
+- 后端：Node.js + JSON 文件存储  
+- 功能：RSS 文章抓取、JSON 数据管理、动态展示  
+
+---
+
+## 安装依赖
+
+确保已安装依赖：
+
+```
+# 使用 npm
 npm install
 
-# pnpm
+# 使用 pnpm
 pnpm install
 
-# yarn
+# 使用 yarn
 yarn install
 
-# bun
+# 使用 bun
 bun install
 ```
 
-## Development Server
+---
 
-Start the development server on `http://localhost:3000`:
+## 启动开发服务器
 
-```bash
+在 `http://localhost:3000` 访问页面：
+
+```
 # npm
 npm run dev
 
@@ -38,11 +56,13 @@ yarn dev
 bun run dev
 ```
 
-## Production
+---
 
-Build the application for production:
+## 构建生产环境
 
-```bash
+打包应用：
+
+```
 # npm
 npm run build
 
@@ -56,9 +76,9 @@ yarn build
 bun run build
 ```
 
-Locally preview production build:
+本地预览生产环境：
 
-```bash
+```
 # npm
 npm run preview
 
@@ -72,4 +92,16 @@ yarn preview
 bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+---
+
+## 特性
+
+- 开箱即用，前后端一体化  
+- RSS 最新文章抓取  
+- JSON 文件存储数据，无数据库依赖  
+- Vue 组件化，轻松扩展页面内容  
+- 支持 TypeScript 和 Pinia 状态管理  
+
+---
+
+更多文档请参考 Nuxt 官方文档：https://nuxt.com/docs/getting-started/introduction

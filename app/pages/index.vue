@@ -40,6 +40,7 @@ import LeftPanel from "@/pages/home/LeftPanel.vue";
 import RightPanel from "@/pages/home/RightPanel.vue";
 import { onMounted } from "vue";
 
+const { $toast } = useNuxtApp();
 const fireflyContainer = ref<HTMLDivElement | null>(null);
 const numFireflies = 20;
 const projectsData = ref<any>(null);
@@ -127,10 +128,10 @@ onMounted(async () => {
 
 <style scoped>
 .bg {
-  background-image: url("../../public/img/bg.png");
-  background-repeat: no-repeat;
+  /* background-image: url("../../public/img/bg.png"); */
+  /* background-repeat: no-repeat;
   background-size: cover;
-  background-attachment: fixed;
+  background-attachment: fixed; */
   /* backdrop-filter: blur(0px); */
 }
 .blur-bg {
@@ -140,6 +141,10 @@ onMounted(async () => {
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(10px);
   background-color: rgba(255, 255, 255, 0.15);
+  background-image: url("../../public/img/bg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
 }
 .page-container {
   max-width: 1400px;
@@ -157,7 +162,7 @@ onMounted(async () => {
 
 /* 左侧容器：限制高度等于右侧内容高度 */
 .left-wrapper {
-  flex: 0 0 500px; /* 固定宽度 */
+  flex: 0 0 500px;
   position: relative;
 }
 
@@ -194,6 +199,9 @@ onMounted(async () => {
 @media (max-width: 700px) {
   .page-container {
     margin-left: 2rem;
+  }
+  .blur-bg {
+    background-image: url("../../public/img/bg.png");
   }
 }
 

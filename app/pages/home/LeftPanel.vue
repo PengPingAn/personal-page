@@ -91,7 +91,6 @@
           </transition>
         </div>
       </div>
-
       <div class="whitespace-pre-line">
         {{ props.personalData?.introduction }}
       </div>

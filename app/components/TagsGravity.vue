@@ -19,22 +19,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 const props = defineProps({
   icons: {
     type: Array,
-    default: () => [
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nuxt/nuxt-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sass/sass-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dot-net/dot-net-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redis/redis-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg",
-    ],
+    default: () => [],
   },
   iconSize: {
     type: Number,
@@ -354,11 +339,17 @@ const loadMatterJS = () => {
 onMounted(async () => {
   try {
     await loadMatterJS();
-    const cleanup = initSimulation();
 
-    if (cleanup) {
-      onUnmounted(cleanup);
-    }
+    watch(
+      () => props.icons,
+      async (icons) => {
+        if (icons.length === 0) return;
+        await nextTick(); // 等 DOM 渲染完
+        const cleanup = initSimulation();
+        if (cleanup) onUnmounted(cleanup);
+      },
+      { immediate: true }
+    );
   } catch (error) {
     console.error("Failed to initialize simulation:", error);
   }

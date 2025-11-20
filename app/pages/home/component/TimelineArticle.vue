@@ -1,151 +1,221 @@
 <template>
   <div class="min-h-[150px] text-[#FFF]">
-    <div class="flex gap-4 mb-4">
-      <div class="h-auto w-[2px] bg-[#e16060]"></div>
-      <span class="font-bold text-xl">
-        2025
-        <span class="text-xs text-[#FFF]"> （{{ timelineData?.length ?? 0 }}） </span>
-      </span>
+    <div v-for="group in timelineData" :key="group.year" class="mb-6">
+      <!-- 年份标题 -->
+      <div class="flex gap-4 mb-4">
+        <div class="h-auto w-[2px] bg-[#e16060]"></div>
+        <span class="font-bold text-xl">
+          <!-- 如果是加载中的分组，显示骨架 -->
+          <template v-if="group.year === 'loading'">
+            <span
+              class="skeleton-text"
+              :style="{ width: getRandomWidth(60, 100) + 'px', display: 'inline-block' }"
+            ></span>
+          </template>
+
+          <!-- 真实数据 -->
+          <template v-else>
+            {{ group.year }}
+            <span class="text-xs text-[#FFF]">（{{ group.items.length }}）</span>
+          </template>
+        </span>
+      </div>
+
+      <!-- 条目 -->
+      <transition-group name="fly-in" tag="div">
+        <div
+          v-for="(item, index) in group.items"
+          :key="item.id"
+          class="flex gap-4 relative timeline-item"
+          :style="{
+            transitionDelay: index * 0.08 + 's',
+            willChange: 'opacity, transform',
+          }"
+        >
+          <!-- 左侧圆点及上下连线 -->
+          <div
+            class="relative flex items-center justify-center"
+            :class="[
+              index !== 0 ? 'before-line' : '',
+              index !== group.items.length - 1 ? 'after-line' : '',
+            ]"
+          >
+            <div class="w-2 h-2 bg-[#fff] rounded-full z-10"></div>
+          </div>
+
+          <!-- 内容 -->
+          <div
+            class="flex justify-between w-full border-b border-gray-200 items-center text-[15px] text-[#FFF] leading-8"
+          >
+            <!-- 左侧文字 -->
+            <div class="flex gap-4 items-center cursor-pointer">
+              <div class="text-sm">
+                <template v-if="!item.loaded">
+                  <span
+                    class="skeleton-text"
+                    :style="{ width: getRandomWidth(40, 70) + 'px' }"
+                  ></span>
+                </template>
+                <template v-else>{{ item.time }}</template>
+              </div>
+
+              <div class="title-hover">
+                <template v-if="!item.loaded">
+                  <span
+                    class="skeleton-text"
+                    :style="{ width: getRandomWidth(100, 200) + 'px' }"
+                  ></span>
+                </template>
+                <template v-else>
+                  <a :href="item.link" target="_blank">{{ item.title }}</a>
+                </template>
+              </div>
+            </div>
+
+            <!-- 右侧信息 -->
+            <div class="text-sm flex gap-2 items-center">
+              <template v-if="!item.loaded">
+                <span
+                  class="skeleton-text"
+                  :style="{ width: getRandomWidth(50, 70) + 'px' }"
+                ></span>
+                /
+                <span
+                  class="skeleton-text"
+                  :style="{ width: getRandomWidth(40, 60) + 'px' }"
+                ></span>
+                /
+                <span
+                  class="skeleton-text"
+                  :style="{ width: getRandomWidth(30, 50) + 'px' }"
+                ></span>
+              </template>
+              <template v-else>
+                <span>心情：{{ item.mood }}</span> /
+                <span>天气：{{ item.weather }}</span> / <span>{{ item.type }}</span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </transition-group>
     </div>
 
-    <transition-group name="fly-in" tag="div">
-      <div
-        v-for="(item, index) in visibleItems"
-        :key="item.id"
-        class="flex gap-4 relative timeline-item"
-        :style="{ transitionDelay: index * 0.08 + 's', willChange: 'opacity, transform' }"
-      >
-        <!-- 左侧圆点及上下连线 -->
-        <div
-          class="relative flex items-center justify-center"
-          :class="[
-            index !== 0 ? 'before-line' : '',
-            index !== visibleItems.length - 1 ? 'after-line' : '',
-          ]"
-        >
-          <div class="w-2 h-2 bg-[#fff] rounded-full z-10"></div>
-        </div>
-
-        <!-- 内容 -->
-        <div
-          class="flex justify-between w-full border-b border-gray-200 items-center text-[15px] text-[#FFF] leading-8"
-        >
-          <!-- 左侧文字 -->
-          <div class="flex gap-4 items-center cursor-pointer">
-            <div class="text-sm">
-              <template v-if="!item.loaded">
-                <span
-                  class="skeleton-text"
-                  :style="{ width: getRandomWidth(40, 70) + 'px' }"
-                ></span>
-              </template>
-              <template v-else>{{ item.time }}</template>
-            </div>
-            <div class="title-hover">
-              <template v-if="!item.loaded">
-                <span
-                  class="skeleton-text"
-                  :style="{ width: getRandomWidth(100, 200) + 'px' }"
-                ></span>
-              </template>
-              <template v-else>{{ item.title }}</template>
-            </div>
-          </div>
-
-          <!-- 右侧信息 -->
-          <div class="text-sm flex gap-2 items-center">
-            <template v-if="!item.loaded">
-              <span
-                class="skeleton-text"
-                :style="{ width: getRandomWidth(50, 70) + 'px' }"
-              ></span>
-              /
-              <span
-                class="skeleton-text"
-                :style="{ width: getRandomWidth(40, 60) + 'px' }"
-              ></span>
-              /
-              <span
-                class="skeleton-text"
-                :style="{ width: getRandomWidth(30, 50) + 'px' }"
-              ></span>
-            </template>
-            <template v-else>
-              <span>心情：{{ item.mood }}</span> / <span>天气：{{ item.weather }}</span> /
-              <span>{{ item.type }}</span>
-            </template>
-          </div>
-        </div>
-      </div>
-    </transition-group>
+    <div class="my-4 text-right">
+      <HoverLink :href="blogLink" color="#FFF" text="还有更多，去看看？" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
+import { useNuxtApp } from "#app";
 
 interface TimelineItem {
   id: number;
+  fullTime: string;
   time: string;
   title: string;
   mood: string;
   weather: string;
   type: string;
-  loaded?: boolean;
+  loaded: boolean;
+  link: string;
 }
 
-// 初始 null，模拟 API 未获取数据
-const timelineData = ref<TimelineItem[] | null>(null);
-const visibleItems = ref<TimelineItem[]>([]);
+interface TimelineGroup {
+  year: string;
+  items: TimelineItem[];
+}
 
-onMounted(() => {
-  // 模拟骨架占位：使用未来真实数据 id 占位
-  const skeletonData: TimelineItem[] = [
-    { id: 1, loaded: false } as TimelineItem,
-    { id: 2, loaded: false } as TimelineItem,
-    { id: 3, loaded: false } as TimelineItem,
-  ];
-  visibleItems.value = skeletonData;
+const props = defineProps({ rss: { type: String, default: "" } });
+const { $toast } = useNuxtApp();
 
-  // 模拟 API 延迟
-  setTimeout(() => {
-    const data: TimelineItem[] = [
-      {
-        id: 1,
-        time: "02/05",
-        title: "镜头与代码的交响",
-        mood: "开心",
-        weather: "阴",
-        type: "手记",
-      },
-      {
-        id: 2,
-        time: "02/06",
-        title: "第二条记录",
-        mood: "平静",
-        weather: "晴",
-        type: "手记",
-      },
-      {
-        id: 3,
-        time: "02/07",
-        title: "第三条记录",
-        mood: "兴奋",
-        weather: "雨",
-        type: "手记",
-      },
-    ];
-    timelineData.value = data;
+const timelineData = ref<TimelineGroup[]>([]);
+const blogLink = ref("");
 
-    // 更新 visibleItems 内容，同时保持 key 一致
-    visibleItems.value = data.map((item) => ({ ...item, loaded: true }));
-  }, 1500);
-});
-
-// 随机骨架长度
 function getRandomWidth(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+function formatDisplayDate(dateStr: string) {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+}
+
+function groupByYear(data: TimelineItem[]): TimelineGroup[] {
+  const groups: Record<string, TimelineItem[]> = {};
+  data.forEach((item) => {
+    const year = new Date(item.fullTime).getFullYear().toString();
+    if (!groups[year]) groups[year] = [];
+    groups[year].push(item);
+  });
+  return Object.keys(groups)
+    .sort((a, b) => Number(b) - Number(a))
+    .map((year) => ({ year, items: groups[year] || [] }));
+}
+
+/**
+ * 固定结构的骨架屏：一个分组、3 条项目
+ * 避免按年份生成导致骨架年份跳动与条目逐条消失
+ */
+function initSkeleton(rowCount = 3) {
+  const items: TimelineItem[] = Array.from({ length: rowCount }, (_, i) => ({
+    id: i + 1,
+    fullTime: "loading",
+    time: "",
+    title: "",
+    mood: "",
+    weather: "",
+    type: "",
+    loaded: false,
+    link: "",
+  }));
+
+  // 固定一个加载分组
+  timelineData.value = [
+    {
+      year: "loading",
+      items,
+    },
+  ];
+}
+
+async function getRss(rss: string) {
+  try {
+    const res = await $request.Get("rss", { url: rss });
+    if (res.code === 200) {
+      const items: TimelineItem[] = res.data.item.map((e: any, index: number) => ({
+        id: index + 1,
+        fullTime: e.pubDate,
+        time: formatDisplayDate(e.pubDate),
+        title: e.title,
+        mood: "兴奋",
+        weather: "晴",
+        type: "手记",
+        loaded: true,
+        link: e.link,
+      }));
+
+      timelineData.value = groupByYear(items);
+      blogLink.value = res.data.blogLink;
+    } else {
+      $toast?.error("获取失败");
+    }
+  } catch (err) {
+    console.error("获取RSS失败", err);
+  }
+}
+
+onMounted(() => initSkeleton(5));
+
+watch(
+  () => props.rss,
+  (newRss) => {
+    if (newRss) getRss(newRss);
+  }
+);
 </script>
 
 <style scoped>
@@ -174,7 +244,7 @@ function getRandomWidth(min: number, max: number) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px; /* 可根据布局调整 */
+  max-width: 220px;
 }
 .title-hover::after {
   content: "";
@@ -225,40 +295,6 @@ function getRandomWidth(min: number, max: number) {
   }
   100% {
     background-position: 200% 0;
-  }
-}
-
-/* 左侧时间文字 */
-.timeline-item .flex > div:first-child .text-sm {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 40px; /* 时间最大宽度 */
-}
-
-/* 右侧信息文字 */
-.timeline-item .text-sm.text-gray-500 {
-  display: flex;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-.timeline-item .text-sm.text-gray-500 span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80px; /* 每段信息最大宽度 */
-}
-
-/* 响应式：移动端隐藏右侧信息，调整标题宽度 */
-@media (max-width: 768px) {
-  .title-hover {
-    max-width: 180px; /* 腾出空间给标题 */
-  }
-  .timeline-item .text-sm.text-gray-500 {
-    display: none; /* 隐藏心情/天气/类型 */
-  }
-  .timeline-item .flex > div:first-child .text-sm {
-    max-width: 60px; /* 时间宽度可稍微增加 */
   }
 }
 </style>

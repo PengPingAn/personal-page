@@ -31,6 +31,7 @@
               <template v-if="item.type === 'text'">
                 <span
                   class="text-lg font-bold text-white whitespace-pre-wrap break-words"
+                  :class="{ flex: item?.link }"
                 >
                   <template
                     v-for="part in splitText(item)"
@@ -53,6 +54,7 @@
                       color="#74fa85"
                       class="inline"
                     />
+
                     <span
                       v-else
                       class="text-lg font-bold inline whitespace-pre-wrap break-words"
@@ -228,6 +230,10 @@ const nextSlide = (tabIndex: number) => {
     (slideIndexes.value[tabIndex] ?? 0) < total - 1
       ? (slideIndexes.value[tabIndex] ?? 0) + 1
       : 0;
+
+  // 点击手动切换时重置自动轮播
+  stopAuto();
+  startAuto();
 };
 const prevSlide = (tabIndex: number) => {
   const total = getTabTotal(tabIndex);
@@ -236,6 +242,10 @@ const prevSlide = (tabIndex: number) => {
     (slideIndexes.value[tabIndex] ?? 0) > 0
       ? (slideIndexes.value[tabIndex] ?? 0) - 1
       : total - 1;
+
+  // 点击手动切换时重置自动轮播
+  stopAuto();
+  startAuto();
 };
 
 let timer: any;

@@ -11,7 +11,7 @@
       </Card>
 
       <Card title="我的技能" class="h-[300px]">
-        <TagsGravity />
+        <TagsGravity :icons="props.personalData?.skills" />
       </Card>
     </div>
 
@@ -21,14 +21,7 @@
           <span class="system-uicons--book-text"></span>
           近期的一些文章
         </p>
-        <TimelineArticle></TimelineArticle>
-        <div class="my-4 text-right">
-          <HoverLink
-            href="https://www.example.com"
-            color="#FFF"
-            text="还有更多，去看看？"
-          />
-        </div>
+        <TimelineArticle :rss="props.personalData?.rss"></TimelineArticle>
       </template>
     </Card>
     <div class="flex gap-4">
@@ -108,11 +101,7 @@
 
           <Card class="flex-[2] h-48">
             <div class="flex justify-center items-center h-full">
-              <img
-                src="https://gitee.com/leefugui/love-world-image-service/raw/master/images/20250928/1761120649_1e91044c.gif"
-                alt=""
-                class="max-h-full"
-              />
+              <Signature />
             </div>
           </Card>
         </div>
@@ -120,11 +109,6 @@
         <div class="flex gap-4">
           <div class="w-fit">
             <Card class="h-full w-full" bg-color="#000">
-              <!-- <PixelatedCanvas
-                :height="200"
-                :width="150"
-                src="https://img1.baidu.com/it/u=2691502892,2994512042&fm=253&fmt=auto&app=138&f=JPEG?w=400&h=676"
-              /> -->
               <ParticleImage
                 :canvas-width="150"
                 :canvas-height="280"
@@ -169,18 +153,6 @@
         </Card>
       </div>
     </div>
-
-    <FloatingCard>
-      <template #trigger>
-        <span style="color: red">浙江"阿勒泰"</span>
-      </template>
-
-      <div>
-        <p>
-          https://www.xiaohongshu.com/404?source=/404/sec_sGGrqMnN?redirectPath=https%3A%2F%2Fwww.xiaohongshu.com%2Fexplore%2F67f0772e000000001c03c216%3Fapp_platform%3Dios%26app_version%3D8.79%26share_from_user_hidden%3Dtrue%26xsec_source%3Dapp_share%26type%3Dnormal%26xsec_token%3DCBkEClgWp5ivhriZb0ewmitvTCU6eBGflDb_5bQ1dlbKo%3D%26author_share%3D1%26xhsshare%3DCopyLink%26shareRedId%3DODgzMzM1PT82NzUyOTgwNjg0OTk0Sj89%26apptime%3D1745402632%26share_id%3Df3357e8caa26450f8364ee0b937ad4d6&error_code=300031&error_msg=%E5%BD%93%E5%89%8D%E7%AC%94%E8%AE%B0%E6%9A%82%E6%97%B6%E6%97%A0%E6%B3%95%E6%B5%8F%E8%A7%88&uuid=53a7d1ba-77da-43d4-9a19-59b9fe7172b4
-        </p>
-      </div>
-    </FloatingCard>
   </div>
 </template>
 
@@ -200,10 +172,10 @@ const props = defineProps({
   },
 });
 
+const { $toast } = useNuxtApp();
 const rollingMessageRef = ref<any>(null);
 const myPlans = ref([]);
 const mbtiCharacter = ref();
-
 const notifications = [
   {
     description: "",
